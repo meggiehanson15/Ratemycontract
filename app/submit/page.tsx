@@ -143,7 +143,6 @@ export default function SubmitPage() {
                 name="review"
                 placeholder="Staffing ratios, floating, orientation, culture, scheduling, housing, recruiter honesty, overtime…"
                 style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
-                required
               />
             </div>
 
