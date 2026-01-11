@@ -1,227 +1,257 @@
 "use client";
 
 import React, { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-export default function SubmitPage() {async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-  const form = e.currentTarget;
-  const formData = new FormData(form);
+export default function SubmitPage() {
+  const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const payload = {
-    city_state: (formData.get("city_state") as string) || null,
-    hospital: (formData.get("hospital") as string) || null,
-    unit: (formData.get("unit") as string) || null,
-    agency: (formData.get("agency") as string) || null,
-    pay: (formData.get("pay") as string) || null,
-    assignment_length: (formData.get("assignment_length") as string) || null,
-    review: (formData.get("review") as string) || null,
-    rating: Number(formData.get("rating") || 5),
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+    setSubmitted(false);
+    setIsSaving(true);
+
+    try {
+      const form = e.currentTarget;
+      const formData = new FormData(form);
+
+      const payload = {
+        city_state: (formData.get("cityState") as string)?.trim() || null,
+        hospital: (formData.get("hospital") as string)?.trim() || null, // REQUIRED
+        unit: (formData.get("unit") as string)?.trim() || null,
+        agency: ((formData.get("agency") as string) || "").trim() || null,
+        pay: ((formData.get("pay") as string) || "").trim() || null,
+        assignment_length:
+          (formData.get("assignment_length") as string)?.trim() || null,
+        review: ((formData.get("review") as string) || "").trim() || null, // OPTIONAL
+        rating: Number(formData.get("rating") || 5),
+      };
+
+      // Hospital required
+      if (!payload.hospital) {
+        setError("Hospital / facility is required.");
+        setIsSaving(false);
+        return;
+      }
+
+      // Rating safety
+      if (Number.isNaN(payload.rating) || payload.rating < 1 || payload.rating > 5) {
+        setError("Please choose a rating from 1 to 5.");
+        setIsSaving(false);
+        return;
+      }
+
+      const { error } = await supabase.from("reviews").insert([payload]);
+
+      if (error) {
+        setError(error.message);
+        setIsSaving(false);
+        return;
+      }
+
+      setSubmitted(true);
+      form.reset();
+    } catch (err: any) {
+      setError(err?.message || "Something went wrong.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  const pageStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    background: "#ffffff",
+    padding: "32px 16px",
   };
 
-  // OPTIONAL: if you still want to require hospital, keep this check
-  if (!payload.hospital) {
-    alert("Please enter a hospital/facility name.");
-    return;
-  }
+  const containerStyle: React.CSSProperties = {
+    maxWidth: 980,
+    margin: "0 auto",
+  };
 
-  const { error } = supabase.from("reviews").insert([payload]);
+  const cardStyle: React.CSSProperties = {
+    border: "1px solid #e5e7eb",
+    borderRadius: 16,
+    padding: 24,
+    background: "#fff",
+  };
 
-  if (error) {
-    alert(`Save failed: ${error.message}`);
-    return;
-  }
+  const h1Style: React.CSSProperties = {
+    fontSize: 36,
+    margin: "8px 0 8px",
+    fontWeight: 800,
+    letterSpacing: -0.5,
+  };
 
-  alert("✅ Review submitted!");
-  form.reset();
-}
+  const subtitleStyle: React.CSSProperties = {
+    margin: "0 0 20px",
+    color: "#4b5563",
+  };
 
-  const [submitted, setSubmitted] = useState(false);
+  const gridStyle: React.CSSProperties = {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 16,
+  };
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const fieldStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: 8,
+  };
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
+  const labelStyle: React.CSSProperties = {
+    fontWeight: 700,
+    fontSize: 13,
+  };
 
-    // Turn the form data into a plain object
-    const payload = Object.fromEntries(formData.entries());
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #e5e7eb",
+    outline: "none",
+    fontSize: 14,
+  };
 
-    // ✅ This shows up in your browser devtools console
-    console.log("SUBMIT payload:", payload);
+  const buttonStyle: React.CSSProperties = {
+    padding: "12px 16px",
+    borderRadius: 12,
+    border: "1px solid #111827",
+    background: "#111827",
+    color: "white",
+    fontWeight: 800,
+    cursor: "pointer",
+  };
 
-    // ✅ Success UI
-    setSubmitted(true);
+  const buttonDisabledStyle: React.CSSProperties = {
+    ...buttonStyle,
+    opacity: 0.6,
+    cursor: "not-allowed",
+  };
 
-    // ✅ Clear the form
-    form.reset();
+  const bannerBase: React.CSSProperties = {
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 12,
+    fontSize: 14,
+  };
 
-    // Optional: hide success message after a few seconds
-    setTimeout(() => setSubmitted(false), 3500);
-  }
+  const successStyle: React.CSSProperties = {
+    ...bannerBase,
+    border: "1px solid #86efac",
+    background: "#f0fdf4",
+  };
+
+  const errorStyle: React.CSSProperties = {
+    ...bannerBase,
+    border: "1px solid #fecaca",
+    background: "#fef2f2",
+  };
 
   return (
-    <main style={{ maxWidth: 920, margin: "0 auto", padding: "32px 16px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            display: "grid",
-            placeItems: "center",
-            border: "1px solid rgba(0,0,0,0.12)",
-          }}
-          aria-hidden
-        >
-          🏥
-        </div>
-        <div>
-          <div style={{ fontWeight: 800, fontSize: 18 }}>RateMyContract</div>
-          <div style={{ opacity: 0.75, fontSize: 13 }}>Share a travel nurse contract experience</div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          border: "1px solid rgba(0,0,0,0.12)",
-          borderRadius: 18,
-          padding: 22,
-          background: "rgba(255,255,255,0.65)",
-          backdropFilter: "blur(6px)",
-        }}
-      >
-        <h1 style={{ fontSize: 30, margin: 0, fontWeight: 900 }}>Submit a Contract Review</h1>
-        <p style={{ marginTop: 8, opacity: 0.8 }}>
-          Keep it honest, helpful, and nurse-focused. Don’t include patient info.
-        </p>
-
-        {submitted && (
-          <div
-            style={{
-              marginTop: 12,
-              marginBottom: 12,
-              padding: "10px 12px",
-              borderRadius: 12,
-              border: "1px solid rgba(0,0,0,0.12)",
-              background: "rgba(0, 200, 150, 0.10)",
-              fontWeight: 600,
-            }}
-          >
-            ✅ Thanks! Your review was “submitted” (logged to the console for now).
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>City / State</label>
-              <input
-                name="cityState"
-                placeholder="e.g., Denver, CO"
-                style={inputStyle}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Hospital / Facility</label>
-              <input
-                name="hospital"
-                placeholder="e.g., UCHealth University Hospital"
-                style={inputStyle}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Unit</label>
-              <input
-                name="unit"
-                placeholder="e.g., ICU, ER, Med-Surg"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Agency (optional)</label>
-              <input
-                name="agency"
-                placeholder="e.g., Aya, AMN, Medical Solutions"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Assignment length</label>
-              <input
-                name="assignmentLength"
-                placeholder="e.g., 13 weeks"
-                style={inputStyle}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Pay (optional)</label>
-              <input
-                name="pay"
-                placeholder="e.g., $2,300/wk or $75/hr"
-                style={inputStyle}
-              />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Your review</label>
-              <textarea
-                name="review"
-                placeholder="Staffing ratios, floating, orientation, culture, scheduling, housing, recruiter honesty, overtime…"
-                style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
-              />
-            </div>
-
-            <div>
-              <label style={{ fontWeight: 700, fontSize: 13 }}>Overall rating</label>
-              <select name="rating" style={inputStyle} defaultValue="5">
-                <option value="5">5 (best)</option>
-                <option value="4">4</option>
-                <option value="3">3</option>
-                <option value="2">2</option>
-                <option value="1">1 (worst)</option>
-              </select>
+    <main style={pageStyle}>
+      <div style={containerStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+          <div style={{ fontSize: 22 }}>📋</div>
+          <div>
+            <div style={{ fontWeight: 900, fontSize: 16 }}>RateMyContract</div>
+            <div style={{ color: "#6b7280", fontSize: 13 }}>
+              Share a travel nurse contract experience
             </div>
           </div>
+        </div>
 
-          <button type="submit" style={buttonStyle}>
-            Submit Review
-          </button>
-
-          <p style={{ marginTop: 10, opacity: 0.7, fontSize: 13 }}>
-            Tip: We’ll add anonymous storage + a real database next.
+        <div style={cardStyle}>
+          <h1 style={h1Style}>Submit a Contract Review</h1>
+          <p style={subtitleStyle}>
+            Keep it honest, helpful, and nurse-focused. Don’t include patient info.
           </p>
-        </form>
+
+          {submitted && (
+            <div style={successStyle}>✅ Thanks! Your review was submitted.</div>
+          )}
+
+          {error && <div style={errorStyle}>❌ {error}</div>}
+
+          <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
+            <div style={gridStyle}>
+              <div style={fieldStyle}>
+                <label style={labelStyle}>City / State</label>
+                <input
+                  name="cityState"
+                  placeholder="e.g., Denver, CO"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Hospital / Facility <span style={{ color: "#ef4444" }}>*</span></label>
+                <input
+                  name="hospital"
+                  placeholder="e.g., UCHealth University Hospital"
+                  style={inputStyle}
+                  required
+                />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Unit</label>
+                <input name="unit" placeholder="e.g., ICU, ER, Med-Surg" style={inputStyle} />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Agency (optional)</label>
+                <input name="agency" placeholder="e.g., Aya, AMN, Medical Solutions" style={inputStyle} />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Assignment length</label>
+                <input name="assignment_length" placeholder="e.g., 13 weeks" style={inputStyle} />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Pay (optional)</label>
+                <input name="pay" placeholder="e.g., $2,300/wk or $75/hr" style={inputStyle} />
+              </div>
+
+              <div style={{ ...fieldStyle, gridColumn: "1 / -1" }}>
+                <label style={labelStyle}>Your review (optional)</label>
+                <textarea
+                  name="review"
+                  placeholder="Staffing ratios, floating, orientation, culture, scheduling, housing, recruiter honesty, overtime…"
+                  style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
+                />
+              </div>
+
+              <div style={fieldStyle}>
+                <label style={labelStyle}>Overall rating</label>
+                <select name="rating" defaultValue="5" style={inputStyle}>
+                  <option value="5">5 (best)</option>
+                  <option value="4">4</option>
+                  <option value="3">3</option>
+                  <option value="2">2</option>
+                  <option value="1">1 (worst)</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <button type="submit" style={isSaving ? buttonDisabledStyle : buttonStyle} disabled={isSaving}>
+                {isSaving ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  marginTop: 6,
-  padding: "12px 12px",
-  borderRadius: 12,
-  border: "1px solid rgba(0,0,0,0.15)",
-  outline: "none",
-  fontSize: 14,
-  background: "white",
-};
-
-const buttonStyle: React.CSSProperties = {
-  marginTop: 16,
-  padding: "12px 14px",
-  borderRadius: 12,
-  border: "1px solid rgba(0,0,0,0.15)",
-  background: "black",
-  color: "white",
-  fontWeight: 800,
-  cursor: "pointer",
-};
