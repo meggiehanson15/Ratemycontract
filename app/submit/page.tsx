@@ -138,7 +138,7 @@ export default function SubmitPage() {
           >
             ✅ Review submitted! Thanks for sharing.
           </div>
-        )
+        )}
 
         {error && (
           <div
