@@ -11,9 +11,11 @@ export default function SubmitPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [success, setSuccess] = useState<string
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setSuccess(null);
     setError(null);
     setSubmitted(false);
     setIsSaving(true);
