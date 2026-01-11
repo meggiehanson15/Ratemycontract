@@ -2,7 +2,40 @@
 
 import React, { useState } from "react";
 
-export default function SubmitPage() {
+export default function SubmitPage() {async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+
+  const form = e.currentTarget;
+  const formData = new FormData(form);
+
+  const payload = {
+    city_state: (formData.get("city_state") as string) || null,
+    hospital: (formData.get("hospital") as string) || null,
+    unit: (formData.get("unit") as string) || null,
+    agency: (formData.get("agency") as string) || null,
+    pay: (formData.get("pay") as string) || null,
+    assignment_length: (formData.get("assignment_length") as string) || null,
+    review: (formData.get("review") as string) || null,
+    rating: Number(formData.get("rating") || 5),
+  };
+
+  // OPTIONAL: if you still want to require hospital, keep this check
+  if (!payload.hospital) {
+    alert("Please enter a hospital/facility name.");
+    return;
+  }
+
+  const { error } = supabase.from("reviews").insert([payload]);
+
+  if (error) {
+    alert(`Save failed: ${error.message}`);
+    return;
+  }
+
+  alert("✅ Review submitted!");
+  form.reset();
+}
+
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
