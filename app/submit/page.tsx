@@ -13,7 +13,7 @@ export default function SubmitPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [success, setSuccess] = useState<string
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSuccess(null);
     setError(null);
@@ -182,7 +182,11 @@ export default function SubmitPage() {
           )}
 
           {error && <div style={errorStyle}>❌ {error}</div>}
-
+          {submitted && (
+            <div style={{ marginBottom: 12, padding: 12, borderRadius: 12, border: "1px solid #b7ebc6" }}>
+            Review submitted! Thanks for sharing.
+              </div>)}
+          )}
           <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
             <div style={gridStyle}>
               <div style={fieldStyle}>
