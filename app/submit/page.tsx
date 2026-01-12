@@ -1,243 +1,158 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-
-const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 12,
-  border: "1px solid #e5e7eb",
-  outline: "none",
-  fontSize: 14,
+type ReviewRow = {
+  id: number;
+  created_at: string | null;
+  city_state: string | null;
+  hospital: string | null;
+  unit: string | null;
+  agency: string | null;
+  pay: string | null;
+  assignment_length: string | null;
+  review: string | null;
+  rating: number | null;
 };
 
-const labelStyle: React.CSSProperties = {
-  fontWeight: 700,
-  fontSize: 13,
-  marginBottom: 6,
-  display: "block",
-};
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-const buttonStyle: React.CSSProperties = {
-  width: "100%",
-  padding: 12,
-  borderRadius: 12,
-  border: "1px solid #111827",
-  background: "#111827",
-  color: "white",
-  fontWeight: 700,
-  cursor: "pointer",
-};
-
-const buttonDisabledStyle: React.CSSProperties = {
-  ...buttonStyle,
-  opacity: 0.6,
-  cursor: "not-allowed",
-};
-
-export default function SubmitPage() {
-  const [isSaving, setIsSaving] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+export default function ReviewsPage() {
+  const [rows, setRows] = useState<ReviewRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setSubmitted(false);
+  async function load() {
+    setLoading(true);
     setError(null);
 
-    if (!supabase) {
-      setError(
-        "Supabase is not configured. Check NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel + local .env."
-      );
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      setError(error.message);
+      setRows([]);
+      setLoading(false);
       return;
     }
 
-    const form = e.currentTarget;
-    const formData = new FormData(form);
-
-    const city_state = String(formData.get("city_state") ?? "").trim();
-    const hospital = String(formData.get("hospital") ?? "").trim();
-    const unit = String(formData.get("unit") ?? "").trim();
-    const agencyRaw = String(formData.get("agency") ?? "").trim();
-    const payRaw = String(formData.get("pay") ?? "").trim();
-    const assignment_length = String(formData.get("assignment_length") ?? "").trim();
-    const reviewRaw = String(formData.get("review") ?? "").trim();
-    const ratingRaw = String(formData.get("rating") ?? "5");
-
-    // REQUIREMENTS YOU ASKED FOR:
-    // - hospital required
-    // - review optional
-    if (!hospital) {
-      setError("Please enter a hospital/facility name.");
-      return;
-    }
-
-    const ratingNum = Number(ratingRaw);
-    const rating =
-      Number.isFinite(ratingNum) && ratingNum >= 1 && ratingNum <= 5
-        ? ratingNum
-        : 5;
-
-    const payload = {
-      city_state: city_state || null,
-      hospital, // required
-      unit: unit || null,
-      agency: agencyRaw || null,
-      pay: payRaw || null,
-      assignment_length: assignment_length || null,
-      review: reviewRaw || null, // optional
-      rating, // 1-5
-    };
-
-    setIsSaving(true);
-    try {
-      const { error: insertError } = await supabase.from("reviews").insert([payload]);
-
-      if (insertError) {
-        setError(insertError.message);
-        return;
-      }
-
-      setSubmitted(true);
-      form.reset();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error submitting review.");
-    } finally {
-      setIsSaving(false);
-    }
+    setRows((data ?? []) as ReviewRow[]);
+    setLoading(false);
   }
 
+  useEffect(() => {
+    load();
+  }, []);
+
   return (
-    <main style={{ padding: 24, display: "flex", justifyContent: "center" }}>
-      <div style={{ width: "min(900px, 100%)" }}>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ fontWeight: 800, fontSize: 28 }}>Submit a Contract Review</div>
-          <div style={{ color: "#6b7280", marginTop: 6 }}>
-            Keep it honest, helpful, and nurse-focused. Don’t include patient info.
-          </div>
+    <main style={{ maxWidth: 900, margin: "0 auto", padding: 24 }}>
+      <h1 style={{ fontSize: 34, fontWeight: 800, marginBottom: 6 }}>Reviews</h1>
+      <p style={{ color: "#555", marginTop: 0 }}>
+        Latest contract reviews submitted by nurses.
+      </p>
+
+      <div style={{ marginTop: 16, marginBottom: 16 }}>
+        <button
+          onClick={load}
+          style={{
+            padding: "10px 14px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: "white",
+            cursor: "pointer",
+            fontWeight: 600,
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {loading && <div>Loading…</div>}
+
+      {!loading && error && (
+        <div
+          style={{
+            background: "#ffecec",
+            border: "1px solid #ffb3b3",
+            padding: 12,
+            borderRadius: 10,
+            color: "#8a0000",
+          }}
+        >
+          Error: {error}
         </div>
+      )}
 
-        {submitted && (
-          <div
-            style={{
-              marginBottom: 12,
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid #b7ebc6",
-              background: "#f0fdf4",
-            }}
-          >
-            ✅ Review submitted! Thanks for sharing.
-          </div>
-        )}
-
-        {error && (
-          <div
-            style={{
-              marginBottom: 12,
-              padding: 12,
-              borderRadius: 12,
-              border: "1px solid #fecaca",
-              background: "#fef2f2",
-              color: "#991b1b",
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} style={{ marginTop: 16 }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 14,
-              alignItems: "start",
-            }}
-          >
-            <div>
-              <label style={labelStyle}>City / State</label>
-              <input name="city_state" placeholder="e.g., Denver, CO" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>
-                Hospital / Facility <span style={{ color: "#ef4444" }}>*</span>
-              </label>
-              <input
-                name="hospital"
-                placeholder="e.g., UCHealth University Hospital"
-                style={inputStyle}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Unit</label>
-              <input name="unit" placeholder="e.g., ICU, ER, Med-Surg" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Agency (optional)</label>
-              <input name="agency" placeholder="e.g., Aya, AMN, Medical Solutions" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Assignment length</label>
-              <input name="assignment_length" placeholder="e.g., 13 weeks" style={inputStyle} />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Pay (optional)</label>
-              <input name="pay" placeholder="e.g., $2,300/wk or $75/hr" style={inputStyle} />
-            </div>
-
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Your review (optional)</label>
-              <textarea
-                name="review"
-                placeholder="Staffing ratios, floating, orientation, culture, scheduling, housing, recruiter honesty, overtime…"
-                style={{ ...inputStyle, minHeight: 120, resize: "vertical" }}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>Overall rating</label>
-              <select name="rating" style={inputStyle} defaultValue="5">
-                <option value="5">5 (best)</option>
-                <option value="4">4</option>
-                <option value="3">3</option>
-                <option value="2">2</option>
-                <option value="1">1 (worst)</option>
-              </select>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "end" }}>
-              <button
-                type="submit"
-                disabled={isSaving}
-                style={isSaving ? buttonDisabledStyle : buttonStyle}
-              >
-                {isSaving ? "Submitting..." : "Submit Review"}
-              </button>
-            </div>
-          </div>
-        </form>
-
-        <div style={{ marginTop: 14, color: "#6b7280", fontSize: 12 }}>
-          Tip: If submissions work locally but not on Vercel, confirm your Vercel env vars are set for
-          Production/Preview/Development and redeploy.
+      {!loading && !error && rows.length === 0 && (
+        <div
+          style={{
+            background: "#f6f6f6",
+            border: "1px solid #e5e5e5",
+            padding: 12,
+            borderRadius: 10,
+          }}
+        >
+          No reviews yet.
         </div>
+      )}
+
+      <div style={{ display: "grid", gap: 12 }}>
+        {rows.map((r) => (
+          <article
+            key={r.id}
+            style={{
+              border: "1px solid #e6e6e6",
+              borderRadius: 14,
+              padding: 14,
+              background: "white",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ fontWeight: 800 }}>
+                {r.hospital ?? "Unknown hospital"}
+              </div>
+              <div style={{ color: "#444", fontWeight: 700 }}>
+                {r.rating ? `⭐ ${r.rating}/5` : "—"}
+              </div>
+            </div>
+
+            <div style={{ color: "#666", marginTop: 6, fontSize: 14 }}>
+              {(r.city_state ?? "Unknown location")}
+              {" • "}
+              {(r.unit ?? "Unknown unit")}
+              {r.assignment_length ? ` • ${r.assignment_length}` : ""}
+            </div>
+
+            {r.agency ? (
+              <div style={{ color: "#666", marginTop: 6, fontSize: 14 }}>
+                Agency: {r.agency}
+              </div>
+            ) : null}
+
+            {r.pay ? (
+              <div style={{ color: "#666", marginTop: 6, fontSize: 14 }}>
+                Pay: {r.pay}
+              </div>
+            ) : null}
+
+            {r.review ? (
+              <p style={{ marginTop: 10, marginBottom: 0, lineHeight: 1.5 }}>
+                {r.review}
+              </p>
+            ) : (
+              <p style={{ marginTop: 10, marginBottom: 0, color: "#777" }}>
+                (No written review)
+              </p>
+            )}
+          </article>
+        ))}
       </div>
     </main>
   );
 }
+
