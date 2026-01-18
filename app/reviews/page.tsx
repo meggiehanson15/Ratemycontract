@@ -1,77 +1,78 @@
 import { createClient } from "@supabase/supabase-js";
+import ReviewsClient from "./ReviewsClient";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+export const dynamic = "force-dynamic";
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-type Review = {
+export type ReviewRow = {
   id: number;
-  hospital: string;
-  city: string | null;
-  state: string | null;
+  created_at: string | null;
+  hospital: string | null;
+  city_state: string | null;
   unit: string | null;
+  agency: string | null;
+  pay: string | null;
   assignment_length: string | null;
   review: string | null;
   rating: number | null;
-  created_at: string;
 };
 
-export default async function ReviewsPage() {
-  const { data: reviews, error } = await supabase
-    .from("reviews")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(20);
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Missing Supabase env vars");
+  return createClient(url, key);
+}
 
-  if (error) {
-    return (
-      <main style={{ padding: 24 }}>
-        <h1>Error loading reviews</h1>
-        <pre>{error.message}</pre>
-      </main>
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string };
+}) {
+  const q = (searchParams?.q ?? "").trim();
+
+  const supabase = getSupabase();
+
+  let query = supabase
+    .from("reviews")
+    .select(
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,review,rating"
+    )
+    .order("id", { ascending: false });
+
+  if (q) {
+    // Search across fields
+    query = query.or(
+      [
+        `hospital.ilike.%${q}%`,
+        `city_state.ilike.%${q}%`,
+        `unit.ilike.%${q}%`,
+        `agency.ilike.%${q}%`,
+      ].join(",")
     );
   }
 
+  const { data, error } = await query;
+
+  // Always pass an array to the client to prevent "undefined.length" errors
+  const reviews: ReviewRow[] = Array.isArray(data) ? (data as ReviewRow[]) : [];
+
   return (
-    <main style={{ maxWidth: 900, margin: "40px auto", padding: 24 }}>
-      <h1 style={{ fontSize: 36, fontWeight: 800, marginBottom: 16 }}>
-        Reviews
-      </h1>
+    <main className="container">
+      <div className="pageHeader">
+        <h1 className="pageTitle">Reviews</h1>
+        <p className="pageSubtitle">
+          Browse honest travel nurse reviews. Search by hospital, city/state, or unit.
+        </p>
+      </div>
 
-      {reviews?.length === 0 && (
-        <p style={{ color: "#666" }}>No reviews yet.</p>
-      )}
-
-      {reviews?.map((review: Review) => (
-        <div
-          key={review.id}
-          style={{
-            border: "1px solid #e5e5e5",
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-            background: "#fff",
-          }}
-        >
-          <h2 style={{ fontSize: 18, fontWeight: 700 }}>
-            {review.hospital}
-          </h2>
-
-          <p style={{ color: "#666", marginBottom: 8 }}>
-            {[review.city, review.state].filter(Boolean).join(", ")}{" "}
-            {review.unit && `• ${review.unit}`}
-          </p>
-
-          {review.rating && (
-            <p style={{ marginBottom: 8 }}>
-              ⭐ {review.rating}/5
-            </p>
-          )}
-
-          {review.review && <p>{review.review}</p>}
+      {error ? (
+        <div className="alert alertError">
+          <div className="alertTitle">Supabase error</div>
+          <div className="alertText">{error.message}</div>
         </div>
-      ))}
+      ) : null}
+
+      <ReviewsClient initialReviews={reviews} initialQuery={q} />
     </main>
   );
 }
