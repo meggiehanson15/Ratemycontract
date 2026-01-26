@@ -1,108 +1,78 @@
+// app/reviews/ReviewsClient.tsx
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import type { ReviewRow } from "./page";
 
-function formatDate(iso: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, { month: "numeric", day: "numeric", year: "numeric" });
-}
+type ReviewRow = {
+  id: number | string;
+  created_at?: string;
+  city_state?: string | null;
+  hospital?: string | null;
+  unit?: string | null;
+  rating?: number | null;
+  assignment_length?: string | null;
+  review?: string | null;
+};
 
-function Stars({ rating }: { rating: number }) {
-  const r = Math.max(0, Math.min(5, rating));
+export default function ReviewsClient({ reviews }: { reviews: ReviewRow[] }) {
   return (
-    <div className="stars" aria-label={`${r} out of 5 stars`}>
-      {"★★★★★".slice(0, r)}
-      <span className="starsEmpty">{"★★★★★".slice(r)}</span>
-    </div>
-  );
-}
+    <div style={{ padding: 24 }}>
+      <h1>Reviews</h1>
 
-export default function ReviewsClient({
-  initialReviews,
-  initialQuery,
-}: {
-  initialReviews: ReviewRow[];
-  initialQuery: string;
-}) {
-  const [q, setQ] = useState(initialQuery ?? "");
+      {!reviews?.length ? (
+        <p>No reviews yet.</p>
+      ) : (
+        <ul style={{ listStyle: "none", padding: 0, display: "grid", gap: 12 }}>
+          {reviews.map((r) => {
+            const idStr = String(r.id ?? "").trim();
 
-  // Local filter (keeps page feeling fast even before server search)
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return initialReviews;
+            // Prevents generating /reviews/ (empty)
+            if (!idStr) {
+              console.warn("Review row missing id:", r);
+              return null;
+            }
 
-    return initialReviews.filter((r) => {
-      const hay = [
-        r.hospital ?? "",
-        r.city_state ?? "",
-        r.unit ?? "",
-        r.agency ?? "",
-      ]
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(term);
-    });
-  }, [initialReviews, q]);
-
-  return (
-    <>
-      <section className="toolbar">
-        <div className="searchWrap">
-          <input
-            className="input"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search hospital, city/state, or unit"
-            aria-label="Search reviews"
-          />
-        </div>
-
-        <Link className="btn btnPrimary" href="/submit">
-          Submit a Review
-        </Link>
-      </section>
-
-      <section className="grid">
-        {filtered.length === 0 ? (
-          <div className="empty">
-            <div className="emptyCard">
-              <div className="emptyTitle">No matches</div>
-              <div className="emptyText">Try a different search.</div>
-            </div>
-          </div>
-        ) : (
-          filtered.map((r) => {
-            const title = (r.hospital || "Unknown hospital").trim();
-            const city = (r.city_state || "").trim();
-            const unit = (r.unit || "").trim();
-            const date = formatDate(r.created_at);
-            const rating = typeof r.rating === "number" ? r.rating : 0;
+            // FIX: Never default rating to 5. Show dash if missing.
+            const ratingDisplay =
+              typeof r.rating === "number" ? `⭐ ${r.rating}` : "—";
 
             return (
-              <article key={r.id} className="card">
-                <div className="cardTop">
-                  <div className="cardTitle">{title}</div>
-                  <Stars rating={rating} />
+              <li
+                key={idStr}
+                style={{
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: 12,
+                  padding: 14,
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>
+                      {r.hospital ?? "Unknown hospital"}
+                    </div>
+                    <div style={{ opacity: 0.8 }}>
+                      {(r.city_state ?? "Unknown city")} · {(r.unit ?? "Unknown unit")}
+                    </div>
+                    {r.assignment_length ? (
+                      <div style={{ opacity: 0.8 }}>Length: {r.assignment_length}</div>
+                    ) : null}
+                  </div>
+
+                  <div style={{ fontWeight: 800 }}>{ratingDisplay}</div>
                 </div>
 
-                <div className="meta">
-                  {city ? <span>{city}</span> : null}
-                  {unit ? <span>• {unit}</span> : null}
-                  {date ? <span>• {date}</span> : null}
-                </div>
+                {r.review ? (
+                  <p style={{ marginTop: 10, opacity: 0.9 }}>{r.review}</p>
+                ) : null}
 
-                <Link className="cardLink" href={`/reviews/${String(r.id)}`}>
-                  View details →
-                </Link>
-              </article>
+                <div style={{ marginTop: 10 }}>
+                  <Link href={`/reviews/${idStr}`}>View details →</Link>
+                </div>
+              </li>
             );
-          })
-        )}
-      </section>
-    </>
+          })}
+        </ul>
+      )}
+    </div>
   );
 }

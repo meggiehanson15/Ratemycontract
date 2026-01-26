@@ -1,139 +1,96 @@
+// app/reviews/[id]/page.tsx
 import Link from "next/link";
-import { createClient } from "@supabase/supabase-js";
+import { supabaseServer } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
-type Review = {
-  id: number;
-  created_at: string | null;
-  hospital: string | null;
-  city_state: string | null;
-  unit: string | null;
-  agency: string | null;
-  pay: string | null;
-  assignment_length: string | null;
-  review: string | null;
-  rating: number | null;
-};
+type ParamsMaybePromise = { id: string } | Promise<{ id: string }>;
 
-function getSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) throw new Error("Missing Supabase env vars");
-  return createClient(url, key);
-}
+export default async function ReviewDetailPage({
+  params,
+}: {
+  params: ParamsMaybePromise;
+}) {
+  // ✅ Works whether params is an object OR a Promise (Next/Turbopack differences)
+  const resolvedParams = await Promise.resolve(params as any);
+  const rawId = String(resolvedParams?.id ?? "").trim();
 
-function Stars({ rating }: { rating: number }) {
-  const r = Math.max(0, Math.min(5, rating));
-  return (
-    <div className="stars" aria-label={`${r} out of 5 stars`}>
-      {"★★★★★".slice(0, r)}
-      <span className="starsEmpty">{"★★★★★".slice(r)}</span>
-    </div>
-  );
-}
+  if (!rawId || !/^\d+$/.test(rawId)) {
+    return (
+      <div style={{ padding: 24 }}>
+        <p>
+          <Link href="/reviews">← Back to reviews</Link>
+        </p>
+        <h1>Review not found</h1>
+        <p>Invalid review id: {rawId || "(empty)"}</p>
 
-function formatDate(iso: string | null) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString(undefined, {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-function InvalidReviewId() {
-  return (
-    <main className="container">
-      <div className="alert alertError">
-        <div className="alertTitle">Invalid review id</div>
-        <div className="alertText">
-          This link doesn’t look right. Go back to reviews and try again.
-        </div>
-        <Link className="btn btnPrimary" href="/reviews">
-          ← Back to Reviews
-        </Link>
+        {/* Helpful debug line (safe to keep) */}
+        <p style={{ opacity: 0.7 }}>
+          Debug: URL param received = <code>{String(resolvedParams?.id ?? "")}</code>
+        </p>
       </div>
-    </main>
-  );
-}
+    );
+  }
 
-export default async function ReviewDetailsPage(props: any) {
-  // Works whether Next passes params as an object OR something async-ish
-  const paramsResolved = await Promise.resolve(props?.params);
-  const rawId = paramsResolved?.id;
+  const supabase = supabaseServer();
 
-  const idNum = Number.parseInt(String(rawId ?? ""), 10);
-  if (!Number.isFinite(idNum)) return <InvalidReviewId />;
-
-  const supabase = getSupabase();
-
-  // IMPORTANT: pass id as a STRING to be safe with int8 handling
   const { data, error } = await supabase
     .from("reviews")
     .select(
-      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,review,rating"
+      "id, created_at, city_state, hospital, unit, rating, assignment_length, review"
     )
-    .eq("id", String(idNum))
-    .maybeSingle();
+    .eq("id", rawId) // Postgres will cast string -> int8
+    .single();
 
-  if (error || !data) return <InvalidReviewId />;
+  if (error || !data) {
+    return (
+      <div style={{ padding: 24 }}>
+        <p>
+          <Link href="/reviews">← Back to reviews</Link>
+        </p>
+        <h1>Review not found</h1>
+        <p>{error?.message ?? "No data returned"}</p>
+      </div>
+    );
+  }
 
-  const r = data as Review;
-  const rating = typeof r.rating === "number" ? r.rating : 0;
+  const ratingDisplay =
+    typeof data.rating === "number" ? `⭐ ${data.rating}` : "—";
 
   return (
-    <main className="container">
-      <Link className="linkSoft" href="/reviews">
-        ← Back to Reviews
-      </Link>
+    <div style={{ padding: 24 }}>
+      <p>
+        <Link href="/reviews">← Back to reviews</Link>
+      </p>
 
-      <div className="detailCard">
-        <div className="detailTop">
-          <h1 className="detailTitle">{r.hospital || "Unknown hospital"}</h1>
-          <Stars rating={rating} />
-        </div>
+      <h1 style={{ marginBottom: 6 }}>{data.hospital ?? "Hospital"}</h1>
+      <p style={{ opacity: 0.8, marginTop: 0 }}>
+        {data.city_state ?? "City"} · {data.unit ?? "Unit"}
+      </p>
 
-        <div className="detailMeta">
-          {r.city_state ? (
-            <div>
-              <span className="label">City/State</span> {r.city_state}
-            </div>
-          ) : null}
-          {r.unit ? (
-            <div>
-              <span className="label">Unit</span> {r.unit}
-            </div>
-          ) : null}
-          {r.agency ? (
-            <div>
-              <span className="label">Agency</span> {r.agency}
-            </div>
-          ) : null}
-          {r.pay ? (
-            <div>
-              <span className="label">Pay</span> {r.pay}
-            </div>
-          ) : null}
-          {r.assignment_length ? (
-            <div>
-              <span className="label">Assignment</span> {r.assignment_length}
-            </div>
-          ) : null}
-          {r.created_at ? (
-            <div>
-              <span className="label">Posted</span> {formatDate(r.created_at)}
-            </div>
-          ) : null}
-        </div>
-
-        <div className="divider" />
-
-        <h2 className="sectionTitle">Review</h2>
-        <p className="reviewText">{r.review || "No written review provided."}</p>
+      <div style={{ marginTop: 14 }}>
+        <strong>Rating:</strong> {ratingDisplay}
       </div>
-    </main>
+
+      {data.assignment_length ? (
+        <div style={{ marginTop: 10 }}>
+          <strong>Assignment length:</strong> {data.assignment_length}
+        </div>
+      ) : null}
+
+      <div style={{ marginTop: 16 }}>
+        <strong>Review:</strong>
+        <p style={{ marginTop: 6 }}>
+          {data.review?.trim() ? data.review : "No written review provided."}
+        </p>
+      </div>
+
+      <div style={{ marginTop: 16, opacity: 0.75 }}>
+        <small>
+          Posted:{" "}
+          {data.created_at ? new Date(data.created_at).toLocaleString() : "—"}
+        </small>
+      </div>
+    </div>
   );
 }
