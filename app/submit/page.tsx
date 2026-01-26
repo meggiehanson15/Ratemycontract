@@ -1,14 +1,18 @@
+// app/submit/page.tsx
+import SubmitForm from "./SubmitForm";
+
+export const dynamic = "force-dynamic";
+
 export default function SubmitPage() {
   return (
-    <div>
-      
-      <p className="subtext">Share an honest review. Please don’t include patient info.</p>
+    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+      <h1 style={{ marginBottom: 6 }}>Submit a Review</h1>
+      <p style={{ opacity: 0.8, marginTop: 0 }}>
+        Share an honest review. Please don’t include patient info.
+      </p>
 
-      <div className="card" style={{ padding: 16 }}>
-        <div className="alert">
-          <div className="alertTitle">Submit form goes here</div>
-          <div>If your submit form already exists, keep it — just make sure it does NOT include header/footer or import globals.css.</div>
-        </div>
+      <div style={{ marginTop: 16 }}>
+        <SubmitForm />
       </div>
     </div>
   );
