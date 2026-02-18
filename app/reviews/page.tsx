@@ -1,35 +1,81 @@
 // app/reviews/page.tsx
+import HospitalAverages from "./HospitalAverages";
 import ReviewsClient from "./ReviewsClient";
 import { supabaseServer } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReviewsPage() {
+export type ReviewRow = {
+  id: number;
+  created_at: string | null;
+  hospital: string | null;
+  city_state: string | null;
+  unit: string | null;
+  agency: string | null;
+  pay: string | null;
+  assignment_length: string | null;
+  review: string | null;
+  rating: number | null;
+};
+
+export default async function ReviewsPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string };
+}) {
+  const q = (searchParams?.q ?? "").trim();
+
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("reviews")
-    .select("id, created_at, city_state, hospital, unit, rating, assignment_length, review")
+    .select(
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,review,rating"
+    )
     .order("created_at", { ascending: false });
+
+  if (q) {
+    // Search across fields
+    query = query.or(
+      [
+        `hospital.ilike.%${q}%`,
+        `city_state.ilike.%${q}%`,
+        `unit.ilike.%${q}%`,
+        `agency.ilike.%${q}%`,
+      ].join(",")
+    );
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("getReviews error:", error.message);
     return (
-      <div style={{ padding: 24 }}>
-        <h1>Reviews</h1>
-        <p>Could not load reviews.</p>
-      </div>
+      <main className="container">
+        <div className="pageHeader">
+          <h1 className="pageTitle">Reviews</h1>
+          <p className="pageSubtitle">Could not load reviews.</p>
+        </div>
+      </main>
     );
   }
 
-  if (!data || data.length === 0) {
-    return (
-      <div style={{ padding: 24 }}>
-        <h1>Reviews</h1>
-        <p>No reviews yet.</p>
-      </div>
-    );
-  }
+  const reviews: ReviewRow[] = Array.isArray(data) ? (data as ReviewRow[]) : [];
 
-  return <ReviewsClient reviews={data} />;
+  return (
+    <main className="container">
+      <div className="pageHeader">
+        <h1 className="pageTitle">Reviews</h1>
+        <p className="pageSubtitle">
+          Browse honest travel nurse reviews. Search by hospital, city/state, or
+          unit.
+        </p>
+      </div>
+
+      {/* ✅ Averages always render here */}
+      <HospitalAverages />
+
+      <ReviewsClient initialReviews={reviews} initialQuery={q} />
+    </main>
+  );
 }
