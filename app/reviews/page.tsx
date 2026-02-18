@@ -24,7 +24,6 @@ export default async function ReviewsPage({
   searchParams?: { q?: string };
 }) {
   const q = (searchParams?.q ?? "").trim();
-
   const supabase = supabaseServer();
 
   let query = supabase
@@ -56,13 +55,19 @@ export default async function ReviewsPage({
           <p className="pageSubtitle">Could not load reviews.</p>
         </div>
 
-        {/* even in error state, show averages */}
+        {/* Still render averages so we know the page is live */}
         <HospitalAverages />
       </main>
     );
   }
 
   const reviews: ReviewRow[] = Array.isArray(data) ? (data as ReviewRow[]) : [];
+
+  // ✅ Normalize null → undefined for client component typing (TypeScript)
+  const reviewsForClient = reviews.map((r) => ({
+    ...r,
+    created_at: r.created_at ?? undefined,
+  }));
 
   return (
     <main className="container">
@@ -73,10 +78,12 @@ export default async function ReviewsPage({
         </p>
       </div>
 
-      {/* ✅ Averages section */}
       <HospitalAverages />
 
-      <ReviewsClient initialReviews={reviews} initialQuery={q} />
+      {/* ReviewsClient expects `reviews` prop */}
+      <ReviewsClient reviews={reviewsForClient as any} />
     </main>
   );
 }
+
+
