@@ -12,13 +12,14 @@ type Row = {
 export default async function HospitalAverages() {
   const supabase = supabaseServer();
 
-  // Pull hospital + rating from the real table you already have
-  const { data, error } = await supabase
-    .from("reviews")
-    .select("hospital, rating");
+  const { data, error } = await supabase.from("reviews").select("hospital, rating");
 
   if (error) {
-    return <p style={{ color: "red" }}>Averages error: {error.message}</p>;
+    return (
+      <p style={{ color: "#ff2d55", fontWeight: 800 }}>
+        Averages error: {error.message}
+      </p>
+    );
   }
 
   const rowsRaw = (data ?? [])
@@ -28,9 +29,14 @@ export default async function HospitalAverages() {
     }))
     .filter((r) => r.hospital.length > 0 && Number.isFinite(r.rating));
 
-  if (!rowsRaw.length) return <p>No hospital averages yet.</p>;
+  if (!rowsRaw.length) {
+    return (
+      <p style={{ color: "#ff2d55", fontWeight: 800 }}>
+        No hospital averages yet.
+      </p>
+    );
+  }
 
-  // Aggregate
   const map = new Map<string, { sum: number; count: number }>();
   for (const r of rowsRaw) {
     const key = r.hospital;
@@ -48,8 +54,18 @@ export default async function HospitalAverages() {
     .slice(0, 20);
 
   return (
-    <div style={{ marginBottom: 24 }}>
-      <h2 style={{ marginBottom: 10 }}>Average ratings per hospital</h2>
+    <section
+      style={{
+        margin: "16px 0 24px",
+        padding: 16,
+        borderRadius: 14,
+        border: "2px solid #ff2d55",
+        background: "rgba(255,45,85,0.08)",
+      }}
+    >
+      <h2 style={{ margin: "0 0 10px", fontSize: 18, fontWeight: 800 }}>
+        Average ratings per hospital
+      </h2>
 
       <div style={{ display: "grid", gap: 10 }}>
         {rows.map((r) => (
@@ -58,20 +74,21 @@ export default async function HospitalAverages() {
             style={{
               padding: 12,
               borderRadius: 12,
-              border: "1px solid #e5e7eb",
+              border: "1px solid rgba(255,255,255,0.25)",
+              background: "rgba(255,255,255,0.06)",
               display: "flex",
               justifyContent: "space-between",
               gap: 12,
             }}
           >
             <div style={{ fontWeight: 800 }}>{r.hospital}</div>
-            <div>
+            <div style={{ fontWeight: 700 }}>
               ⭐ {r.avg_rating.toFixed(1)}{" "}
-              <span style={{ opacity: 0.7 }}>({r.review_count} reviews)</span>
+              <span style={{ opacity: 0.8 }}>({r.review_count} reviews)</span>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

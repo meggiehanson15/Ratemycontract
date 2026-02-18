@@ -35,7 +35,6 @@ export default async function ReviewsPage({
     .order("created_at", { ascending: false });
 
   if (q) {
-    // Search across fields
     query = query.or(
       [
         `hospital.ilike.%${q}%`,
@@ -56,6 +55,9 @@ export default async function ReviewsPage({
           <h1 className="pageTitle">Reviews</h1>
           <p className="pageSubtitle">Could not load reviews.</p>
         </div>
+
+        {/* even in error state, show averages */}
+        <HospitalAverages />
       </main>
     );
   }
@@ -67,12 +69,11 @@ export default async function ReviewsPage({
       <div className="pageHeader">
         <h1 className="pageTitle">Reviews</h1>
         <p className="pageSubtitle">
-          Browse honest travel nurse reviews. Search by hospital, city/state, or
-          unit.
+          Browse honest travel nurse reviews. Search by hospital, city/state, or unit.
         </p>
       </div>
 
-      {/* ✅ Averages always render here */}
+      {/* ✅ Averages section */}
       <HospitalAverages />
 
       <ReviewsClient initialReviews={reviews} initialQuery={q} />
