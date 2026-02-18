@@ -1,6 +1,7 @@
 // app/reviews/page.tsx
 import Link from "next/link";
 import { supabaseServer } from "@/lib/supabaseServer";
+import HospitalAverages from "./HospitalAverages";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,8 @@ export default async function ReviewsPage() {
   if (error) {
     return (
       <div style={{ padding: 24 }}>
-        <h1>Reviews</h1>
+        <h1>Travel Nurse Reviews</h1>
+        <HospitalAverages />
         <p style={{ color: "red" }}>{error.message}</p>
       </div>
     );
@@ -25,7 +27,10 @@ export default async function ReviewsPage() {
 
   return (
     <div style={{ padding: 24 }}>
-      <h1 style={{ marginBottom: 20 }}>Travel Nurse Reviews</h1>
+      <h1 style={{ marginBottom: 16 }}>Travel Nurse Reviews</h1>
+
+      {/* ✅ averages at the top */}
+      <HospitalAverages />
 
       {!data || data.length === 0 ? (
         <p>No reviews yet.</p>
@@ -44,21 +49,19 @@ export default async function ReviewsPage() {
                 color: "inherit",
               }}
             >
-              <h3 style={{ margin: 0 }}>
-                {review.hospital ?? "Hospital"}
-              </h3>
+              <h3 style={{ margin: 0 }}>{review.hospital ?? "Hospital"}</h3>
 
               <p style={{ margin: "4px 0", opacity: 0.8 }}>
                 {review.city_state ?? "City"} · {review.unit ?? "Unit"}
               </p>
 
               <p style={{ margin: "6px 0" }}>
-                ⭐ {review.rating ?? "—"}
+                ⭐ {typeof review.rating === "number" ? review.rating : "—"}
               </p>
 
               {review.assignment_length && (
                 <p style={{ margin: 0, opacity: 0.7 }}>
-                  {review.assignment_length}
+                  Length: {review.assignment_length}
                 </p>
               )}
             </Link>
