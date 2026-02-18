@@ -1,14 +1,36 @@
 // app/submit/SubmitForm.tsx
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+type InsertReview = {
+  city_state: string | null;
+  hospital: string;
+  unit: string | null;
+  agency: string | null;
+  pay: string | null;
+  assignment_length: string | null;
+  review: string | null;
+  rating: number;
+};
 
 export default function SubmitForm() {
+  const router = useRouter();
+
+  // Create client safely at runtime (more stable in prod)
+  const supabase = useMemo(() => {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      // We'll show a friendly error in UI below
+      return null;
+    }
+    return createClient(url, key);
+  }, []);
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -26,25 +48,50 @@ export default function SubmitForm() {
     e.preventDefault();
     setError(null);
     setSuccess(null);
+
+    if (!supabase) {
+      setError("Missing Supabase environment variables in this deployment.");
+      return;
+    }
+
+    const hospitalClean = hospital.trim();
+    const ratingClean = Number(rating);
+
+    if (!hospitalClean) {
+      setError("Hospital / Facility is required.");
+      return;
+    }
+    if (!Number.isFinite(ratingClean) || ratingClean < 1 || ratingClean > 5) {
+      setError("Rating must be between 1 and 5.");
+      return;
+    }
+
+    const payload: InsertReview = {
+      city_state: cityState.trim() ? cityState.trim() : null,
+      hospital: hospitalClean,
+      unit: unit.trim() ? unit.trim() : null,
+      agency: agency.trim() ? agency.trim() : null,
+      pay: pay.trim() ? pay.trim() : null,
+      assignment_length: assignmentLength.trim() ? assignmentLength.trim() : null,
+      review: review.trim() ? review.trim() : null,
+      rating: ratingClean,
+    };
+
     setIsSaving(true);
 
     try {
-      const { error: insertError } = await supabase.from("reviews").insert([
-        {
-          city_state: cityState || null,
-          hospital,
-          unit: unit || null,
-          agency: agency || null,
-          pay: pay || null,
-          assignment_length: assignmentLength || null,
-          review: review || null,
-          rating,
-        },
-      ]);
+      // Return the inserted id so we can redirect to the detail page
+      const { data, error: insertError } = await supabase
+        .from("reviews")
+        .insert([payload])
+        .select("id")
+        .single();
 
       if (insertError) throw insertError;
 
-      setSuccess("Review submitted! Thanks for sharing.");
+      setSuccess("Review submitted! Redirecting…");
+
+      // Clear form (optional)
       setCityState("");
       setHospital("");
       setUnit("");
@@ -53,6 +100,16 @@ export default function SubmitForm() {
       setAssignmentLength("");
       setReview("");
       setRating(5);
+
+      const newId = data?.id;
+      if (newId !== undefined && newId !== null) {
+        router.push(`/reviews/${String(newId)}`);
+        router.refresh();
+      } else {
+        // Fallback: go to reviews list
+        router.push("/reviews");
+        router.refresh();
+      }
     } catch (err: any) {
       setError(err?.message ?? "Something went wrong submitting the review.");
     } finally {
