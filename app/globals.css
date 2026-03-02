@@ -536,4 +536,14 @@ button.pill:disabled{
   }
   .brand{ min-width: 0; }
   .nav{ justify-content: flex-start; }
+  /* ===== Global Notice Banner ===== */
+
+.siteNotice {
+  background: #f4f7fb;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  text-align: center;
+  padding: 8px 14px;
+  color: #475569;
+}
 }
