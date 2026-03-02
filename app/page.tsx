@@ -121,9 +121,19 @@ export default function HomePage() {
               cursor: "pointer",
             }}
           >
-            Search
+            Search Contracts
           </button>
         </form>
+        <p style={{
+          marginTop: 18,
+          fontSize: 14,
+          color: "#64748b",
+          lineHeight: 1.6
+        }}>
+          100% anonymous. No login required.
+          <br />
+          Built to help nurses negotiate better contracts.
+        </p>
 
         {/* Dropdown */}
         {open && trimmed.length >= 2 && (
