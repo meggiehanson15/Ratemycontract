@@ -8,6 +8,34 @@ type Suggestions = {
   cities: string[];
 };
 
+function toTitleCase(input: string) {
+  // Basic title-case that works well for hospitals/cities.
+  // Keeps punctuation and multiple spaces under control.
+  return input
+    .trim()
+    .replace(/\s+/g, " ")
+    .split(" ")
+    .map((word) => {
+      const w = word.toLowerCase();
+
+      // Keep common acronyms uppercase
+      const acronyms = new Set(["ICU", "ER", "OR", "PACU", "ED", "RN", "LPN", "NP", "PA", "OB", "NICU"]);
+      if (acronyms.has(word.toUpperCase())) return word.toUpperCase();
+
+      // Handle things like "st." -> "St."
+      if (w === "st." || w === "st") return "St.";
+      if (w === "mt." || w === "mt") return "Mt.";
+      if (w === "dr." || w === "dr") return "Dr.";
+
+      // Title-case normal words, keep hyphenated pieces title-cased too
+      return w
+        .split("-")
+        .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
+        .join("-");
+    })
+    .join(" ");
+}
+
 export default function HomePage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -22,7 +50,7 @@ export default function HomePage() {
 
   const trimmed = useMemo(() => q.trim(), [q]);
 
-  // close dropdown on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (!wrapRef.current) return;
@@ -32,7 +60,7 @@ export default function HomePage() {
     return () => window.removeEventListener("mousedown", onDown);
   }, []);
 
-  // debounced fetch suggestions
+  // Debounced fetch suggestions
   useEffect(() => {
     const t = setTimeout(async () => {
       const query = trimmed;
@@ -46,16 +74,17 @@ export default function HomePage() {
       try {
         const res = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
         const json = (await res.json()) as Suggestions;
+
         setSuggestions({
-          hospitals: Array.isArray(json.hospitals) ? json.hospitals : [],
-          cities: Array.isArray(json.cities) ? json.cities : [],
+          hospitals: Array.isArray(json?.hospitals) ? json.hospitals : [],
+          cities: Array.isArray(json?.cities) ? json.cities : [],
         });
       } catch {
         setSuggestions({ hospitals: [], cities: [] });
       } finally {
         setLoading(false);
       }
-    }, 200);
+    }, 220);
 
     return () => clearTimeout(t);
   }, [trimmed]);
@@ -64,9 +93,9 @@ export default function HomePage() {
     suggestions.hospitals.length > 0 || suggestions.cities.length > 0;
 
   function choose(value: string) {
-    setQ(value);
+    // ✅ force title case when choosing from dropdown
+    setQ(toTitleCase(value));
     setOpen(false);
-    // keep focus
     requestAnimationFrame(() => inputRef.current?.focus());
   }
 
@@ -74,83 +103,116 @@ export default function HomePage() {
     if (e.key === "Escape") setOpen(false);
   }
 
+  function onSubmitNormalize() {
+    // ✅ If they typed free-form (not chosen), normalize it right before submit.
+    // This helps avoid lowercase junk in URLs/search queries too.
+    setQ((prev) => (prev.trim() ? toTitleCase(prev) : prev));
+  }
+
   return (
-    <main style={{ maxWidth: 700, margin: "60px auto", padding: 20 }}>
-      <h1 style={{ fontSize: 32, marginBottom: 10 }}>RateMyContract</h1>
-
-      <p style={{ color: "#555", marginBottom: 20 }}>
-        Transparent travel nurse contract reviews.
-        <br />
-        Real experiences. Real pay. Real units.
-      </p>
-
-      {/* SEARCH FORM */}
-      <div ref={wrapRef} style={{ position: "relative" }}>
-        <form action="/reviews" method="GET">
-          <input
-            ref={inputRef}
-            name="q"
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              setOpen(true);
-            }}
-            onFocus={() => setOpen(true)}
-            onKeyDown={onKeyDown}
-            autoComplete="off"
-            placeholder="Search hospital or city (e.g., Sanford, Fargo, SD)"
-            style={{
-              padding: "10px 12px",
-              width: "70%",
-              borderRadius: 8,
-              border: "1px solid #cbd5e1",
-              marginRight: 8,
-              fontSize: 16,
-            }}
-          />
-
-          <button
-            type="submit"
-            style={{
-              padding: "10px 16px",
-              borderRadius: 8,
-              border: "none",
-              background: "#0f172a",
-              color: "white",
-              fontSize: 16,
-              cursor: "pointer",
-            }}
-          >
-            Search Contracts
-          </button>
-        </form>
-        <p style={{
-          marginTop: 18,
-          fontSize: 14,
-          color: "#64748b",
-          lineHeight: 1.6
-        }}>
-          100% anonymous. No login required.
-          <br />
-          Built to help nurses negotiate better contracts.
+    <main
+      style={{
+        maxWidth: 860,
+        margin: "0 auto",
+        padding: "56px 20px 64px",
+      }}
+    >
+      {/* HERO */}
+      <div style={{ marginBottom: 26 }}>
+        <h1 style={{ fontSize: 44, letterSpacing: -0.5, margin: 0 }}>
+          RateMyContract
+        </h1>
+        <p style={{ color: "#475569", marginTop: 10, lineHeight: 1.6, maxWidth: 720 }}>
+          Transparent travel nurse contract reviews — real experiences, real pay, real units.
         </p>
+      </div>
+
+      {/* SEARCH CARD */}
+      <div
+        ref={wrapRef}
+        style={{
+          position: "relative",
+          border: "1px solid #e5e7eb",
+          borderRadius: 16,
+          padding: 18,
+          background: "#fff",
+          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
+          maxWidth: 760,
+        }}
+      >
+        <form action="/reviews" method="GET" onSubmit={onSubmitNormalize}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input
+              ref={inputRef}
+              name="q"
+              value={q}
+              onChange={(e) => {
+                setQ(e.target.value);
+                setOpen(true);
+              }}
+              onFocus={() => setOpen(true)}
+              onKeyDown={onKeyDown}
+              autoComplete="off"
+              placeholder="Search hospital or city (e.g., Sanford, Fargo, SD)"
+              style={{
+                flex: 1,
+                padding: "12px 14px",
+                borderRadius: 12,
+                border: "1px solid #cbd5e1",
+                fontSize: 16,
+                outline: "none",
+              }}
+            />
+
+            <button
+              type="submit"
+              style={{
+                padding: "12px 16px",
+                borderRadius: 12,
+                border: "none",
+                background: "#0f172a",
+                color: "white",
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Search
+            </button>
+          </div>
+
+          <div style={{ marginTop: 10, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+            <div>100% anonymous. No login required.</div>
+            <div>Built to help nurses negotiate better contracts.</div>
+          </div>
+        </form>
 
         {/* Dropdown */}
         {open && trimmed.length >= 2 && (
           <div
             style={{
               position: "absolute",
+              left: 18,
+              right: 18,
+              top: 78,
               zIndex: 20,
-              marginTop: 8,
-              width: "70%",
-              borderRadius: 12,
+              borderRadius: 14,
               border: "1px solid #e5e7eb",
               background: "white",
-              boxShadow: "0 12px 24px rgba(0,0,0,0.08)",
+              boxShadow: "0 18px 40px rgba(0,0,0,0.10)",
               overflow: "hidden",
             }}
           >
-            <div style={{ padding: "10px 12px", fontSize: 13, color: "#6b7280" }}>
+            <div
+              style={{
+                padding: "10px 12px",
+                fontSize: 13,
+                color: "#6b7280",
+                background: "#f8fafc",
+                borderBottom: "1px solid #eef2f7",
+              }}
+            >
               {loading
                 ? "Searching…"
                 : hasAny
@@ -158,81 +220,99 @@ export default function HomePage() {
                 : "No suggestions yet — press Search to browse anyway"}
             </div>
 
-            {suggestions.hospitals.length > 0 && (
-              <div style={{ borderTop: "1px solid #f1f5f9" }}>
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    fontSize: 12,
-                    color: "#0f172a",
-                    fontWeight: 800,
-                    background: "#f8fafc",
-                  }}
-                >
-                  Hospitals
-                </div>
-                {suggestions.hospitals.map((h) => (
-                  <button
-                    key={`h-${h}`}
-                    type="button"
-                    onClick={() => choose(h)}
+            <div style={{ maxHeight: 280, overflowY: "auto" }}>
+              {suggestions.hospitals.length > 0 && (
+                <div>
+                  <div
                     style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 12px",
-                      border: "none",
-                      background: "white",
-                      cursor: "pointer",
-                      fontSize: 14,
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      color: "#0f172a",
+                      fontWeight: 800,
+                      background: "#ffffff",
                     }}
                   >
-                    {h}
-                  </button>
-                ))}
-              </div>
-            )}
+                    Hospitals
+                  </div>
 
-            {suggestions.cities.length > 0 && (
-              <div style={{ borderTop: "1px solid #f1f5f9" }}>
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    fontSize: 12,
-                    color: "#0f172a",
-                    fontWeight: 800,
-                    background: "#f8fafc",
-                  }}
-                >
-                  Cities
+                  {suggestions.hospitals.map((h) => (
+                    <button
+                      key={`h-${h}`}
+                      type="button"
+                      onClick={() => choose(h)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        border: "none",
+                        background: "white",
+                        cursor: "pointer",
+                        fontSize: 14,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget.style.background = "#f8fafc");
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget.style.background = "white");
+                      }}
+                    >
+                      {toTitleCase(h)}
+                    </button>
+                  ))}
+
+                  <div style={{ height: 1, background: "#eef2f7" }} />
                 </div>
-                {suggestions.cities.map((c) => (
-                  <button
-                    key={`c-${c}`}
-                    type="button"
-                    onClick={() => choose(c)}
+              )}
+
+              {suggestions.cities.length > 0 && (
+                <div>
+                  <div
                     style={{
-                      width: "100%",
-                      textAlign: "left",
-                      padding: "10px 12px",
-                      border: "none",
-                      background: "white",
-                      cursor: "pointer",
-                      fontSize: 14,
+                      padding: "8px 12px",
+                      fontSize: 12,
+                      color: "#0f172a",
+                      fontWeight: 800,
+                      background: "#ffffff",
                     }}
                   >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            )}
+                    Cities
+                  </div>
+
+                  {suggestions.cities.map((c) => (
+                    <button
+                      key={`c-${c}`}
+                      type="button"
+                      onClick={() => choose(c)}
+                      style={{
+                        width: "100%",
+                        textAlign: "left",
+                        padding: "10px 12px",
+                        border: "none",
+                        background: "white",
+                        cursor: "pointer",
+                        fontSize: 14,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget.style.background = "#f8fafc");
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget.style.background = "white");
+                      }}
+                    >
+                      {toTitleCase(c)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      <p style={{ marginTop: 30, color: "#777", fontSize: 14 }}>
-        Built by travelers, for travelers. Anonymous. Honest. Community-driven.
+      {/* FOOTER LINE */}
+      <p style={{ marginTop: 22, color: "#94a3b8", fontSize: 13 }}>
+        Built by travelers, for travelers.
       </p>
     </main>
   );
 }
-
