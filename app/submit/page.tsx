@@ -1,19 +1,40 @@
 // app/submit/page.tsx
 import SubmitForm from "./SubmitForm";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default function SubmitPage() {
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1 style={{ marginBottom: 6 }}>Submit a Review</h1>
-      <p style={{ opacity: 0.8, marginTop: 0 }}>
-        Share an honest review. Please don’t include patient info.
-      </p>
+    <section>
+      <div className="pageHeader">
+        <div className="pageHeaderTop">
+          <div>
+            <h1 className="pageTitle">Submit a Review</h1>
+            <p className="pageSubtitle">
+              Share an honest travel nurse contract experience to help others
+              negotiate smarter.
+            </p>
+          </div>
 
-      <div style={{ marginTop: 16 }}>
+          <Link className="pill" href="/reviews">
+            Browse Reviews
+          </Link>
+        </div>
+      </div>
+
+      {/* Trust / safety notice */}
+      <div className="card cardPad submitNotice">
+        <strong>Anonymous submission</strong>
+        <p className="kicker" style={{ marginTop: 6 }}>
+          Do not include patient information (PHI), coworker names,
+          or confidential hospital details.
+        </p>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
         <SubmitForm />
       </div>
-    </div>
+    </section>
   );
 }

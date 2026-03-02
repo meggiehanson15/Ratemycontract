@@ -1,6 +1,7 @@
 // app/page.tsx
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Suggestions = {
@@ -9,8 +10,6 @@ type Suggestions = {
 };
 
 function toTitleCase(input: string) {
-  // Basic title-case that works well for hospitals/cities.
-  // Keeps punctuation and multiple spaces under control.
   return input
     .trim()
     .replace(/\s+/g, " ")
@@ -18,16 +17,25 @@ function toTitleCase(input: string) {
     .map((word) => {
       const w = word.toLowerCase();
 
-      // Keep common acronyms uppercase
-      const acronyms = new Set(["ICU", "ER", "OR", "PACU", "ED", "RN", "LPN", "NP", "PA", "OB", "NICU"]);
+      const acronyms = new Set([
+        "ICU",
+        "ER",
+        "OR",
+        "PACU",
+        "ED",
+        "RN",
+        "LPN",
+        "NP",
+        "PA",
+        "OB",
+        "NICU",
+      ]);
       if (acronyms.has(word.toUpperCase())) return word.toUpperCase();
 
-      // Handle things like "st." -> "St."
       if (w === "st." || w === "st") return "St.";
       if (w === "mt." || w === "mt") return "Mt.";
       if (w === "dr." || w === "dr") return "Dr.";
 
-      // Title-case normal words, keep hyphenated pieces title-cased too
       return w
         .split("-")
         .map((part) => (part ? part[0].toUpperCase() + part.slice(1) : part))
@@ -89,11 +97,9 @@ export default function HomePage() {
     return () => clearTimeout(t);
   }, [trimmed]);
 
-  const hasAny =
-    suggestions.hospitals.length > 0 || suggestions.cities.length > 0;
+  const hasAny = suggestions.hospitals.length > 0 || suggestions.cities.length > 0;
 
   function choose(value: string) {
-    // ✅ force title case when choosing from dropdown
     setQ(toTitleCase(value));
     setOpen(false);
     requestAnimationFrame(() => inputRef.current?.focus());
@@ -104,44 +110,36 @@ export default function HomePage() {
   }
 
   function onSubmitNormalize() {
-    // ✅ If they typed free-form (not chosen), normalize it right before submit.
-    // This helps avoid lowercase junk in URLs/search queries too.
     setQ((prev) => (prev.trim() ? toTitleCase(prev) : prev));
   }
 
   return (
-    <main
-      style={{
-        maxWidth: 860,
-        margin: "0 auto",
-        padding: "56px 20px 64px",
-      }}
-    >
+    <section style={{ padding: "38px 0 10px" }}>
       {/* HERO */}
-      <div style={{ marginBottom: 26 }}>
-        <h1 style={{ fontSize: 44, letterSpacing: -0.5, margin: 0 }}>
+      <div style={{ maxWidth: 860, padding: "18px 0 10px" }}>
+        <h1 className="h1" style={{ fontSize: 54, letterSpacing: -0.6, marginBottom: 10 }}>
           RateMyContract
         </h1>
-        <p style={{ color: "#475569", marginTop: 10, lineHeight: 1.6, maxWidth: 720 }}>
+        <p className="sub" style={{ maxWidth: 720 }}>
           Transparent travel nurse contract reviews — real experiences, real pay, real units.
         </p>
+
+        {/* CTAs */}
+        <div className="rowWrap" style={{ margin: "10px 0 18px" }}>
+          <Link className="pill pillPrimary" href="/submit">
+            Submit a Review
+          </Link>
+          <Link className="pill" href="/reviews">
+            Browse Reviews
+          </Link>
+          <span className="kicker">Anonymous • No login required</span>
+        </div>
       </div>
 
       {/* SEARCH CARD */}
-      <div
-        ref={wrapRef}
-        style={{
-          position: "relative",
-          border: "1px solid #e5e7eb",
-          borderRadius: 16,
-          padding: 18,
-          background: "#fff",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.06)",
-          maxWidth: 760,
-        }}
-      >
+      <div ref={wrapRef} className="card cardPad" style={{ maxWidth: 760, position: "relative" }}>
         <form action="/reviews" method="GET" onSubmit={onSubmitNormalize}>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div className="row">
             <input
               ref={inputRef}
               name="q"
@@ -154,35 +152,14 @@ export default function HomePage() {
               onKeyDown={onKeyDown}
               autoComplete="off"
               placeholder="Search hospital or city (e.g., Sanford, Fargo, SD)"
-              style={{
-                flex: 1,
-                padding: "12px 14px",
-                borderRadius: 12,
-                border: "1px solid #cbd5e1",
-                fontSize: 16,
-                outline: "none",
-              }}
+              className="input"
             />
-
-            <button
-              type="submit"
-              style={{
-                padding: "12px 16px",
-                borderRadius: 12,
-                border: "none",
-                background: "#0f172a",
-                color: "white",
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <button type="submit" className="button">
               Search
             </button>
           </div>
 
-          <div style={{ marginTop: 10, color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
+          <div style={{ marginTop: 10 }} className="kicker">
             <div>100% anonymous. No login required.</div>
             <div>Built to help nurses negotiate better contracts.</div>
           </div>
@@ -190,29 +167,8 @@ export default function HomePage() {
 
         {/* Dropdown */}
         {open && trimmed.length >= 2 && (
-          <div
-            style={{
-              position: "absolute",
-              left: 18,
-              right: 18,
-              top: 78,
-              zIndex: 20,
-              borderRadius: 14,
-              border: "1px solid #e5e7eb",
-              background: "white",
-              boxShadow: "0 18px 40px rgba(0,0,0,0.10)",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                padding: "10px 12px",
-                fontSize: 13,
-                color: "#6b7280",
-                background: "#f8fafc",
-                borderBottom: "1px solid #eef2f7",
-              }}
-            >
+          <div className="suggestions">
+            <div className="suggestionsHeader">
               {loading
                 ? "Searching…"
                 : hasAny
@@ -220,84 +176,36 @@ export default function HomePage() {
                 : "No suggestions yet — press Search to browse anyway"}
             </div>
 
-            <div style={{ maxHeight: 280, overflowY: "auto" }}>
+            <div className="suggestionsBody">
               {suggestions.hospitals.length > 0 && (
                 <div>
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      fontSize: 12,
-                      color: "#0f172a",
-                      fontWeight: 800,
-                      background: "#ffffff",
-                    }}
-                  >
-                    Hospitals
-                  </div>
+                  <div className="suggestionsGroupTitle">Hospitals</div>
 
                   {suggestions.hospitals.map((h) => (
                     <button
                       key={`h-${h}`}
                       type="button"
                       onClick={() => choose(h)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        border: "none",
-                        background: "white",
-                        cursor: "pointer",
-                        fontSize: 14,
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget.style.background = "#f8fafc");
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget.style.background = "white");
-                      }}
+                      className="suggestionsItem"
                     >
                       {toTitleCase(h)}
                     </button>
                   ))}
 
-                  <div style={{ height: 1, background: "#eef2f7" }} />
+                  <div className="suggestionsDivider" />
                 </div>
               )}
 
               {suggestions.cities.length > 0 && (
                 <div>
-                  <div
-                    style={{
-                      padding: "8px 12px",
-                      fontSize: 12,
-                      color: "#0f172a",
-                      fontWeight: 800,
-                      background: "#ffffff",
-                    }}
-                  >
-                    Cities
-                  </div>
+                  <div className="suggestionsGroupTitle">Cities</div>
 
                   {suggestions.cities.map((c) => (
                     <button
                       key={`c-${c}`}
                       type="button"
                       onClick={() => choose(c)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "10px 12px",
-                        border: "none",
-                        background: "white",
-                        cursor: "pointer",
-                        fontSize: 14,
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget.style.background = "#f8fafc");
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget.style.background = "white");
-                      }}
+                      className="suggestionsItem"
                     >
                       {toTitleCase(c)}
                     </button>
@@ -309,10 +217,9 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* FOOTER LINE */}
-      <p style={{ marginTop: 22, color: "#94a3b8", fontSize: 13 }}>
+      <p className="kicker" style={{ marginTop: 18 }}>
         Built by travelers, for travelers.
       </p>
-    </main>
+    </section>
   );
 }
