@@ -79,7 +79,9 @@ export default function HomePage() {
       <h1 style={{ fontSize: 32, marginBottom: 10 }}>RateMyContract</h1>
 
       <p style={{ color: "#555", marginBottom: 20 }}>
-        Honest travel nurse reviews by city, hospital, and unit.
+        Transparent travel nurse contract reviews.
+        <br />
+        Real experiences. Real pay. Real units.
       </p>
 
       {/* SEARCH FORM */}
