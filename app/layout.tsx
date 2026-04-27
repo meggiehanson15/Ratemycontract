@@ -1,6 +1,7 @@
 import "./globals.css";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 const siteUrl =
   process.env.NEXT_PUBLIC_SITE_URL?.startsWith("http")
@@ -52,8 +53,16 @@ export default function RootLayout({
 
         <footer className="footer">
           <div className="footerInner">
-            <div>
-              © {new Date().getFullYear()} RateMyContract
+            <div className="footerLeft">
+              <div className="footerBrand">RateMyContract</div>
+
+              <p className="footerNote">
+                Reviews reflect individual experiences and are not independently verified.
+              </p>
+
+              <p className="footerCopy">
+                © {new Date().getFullYear()} RateMyContract
+              </p>
             </div>
 
             <div className="footerLinks">
@@ -64,26 +73,10 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+
+        {/* ✅ Analytics added safely */}
+        <Analytics />
       </body>
     </html>
   );
-}<footer className="footer">
-  <div className="footerInner">
-    <div className="footerLeft">
-      <div className="footerBrand">RateMyContract</div>
-
-      <p className="footerNote">
-        Reviews reflect individual experiences and are not independently verified.
-      </p>
-
-      <p className="footerCopy">© 2026 RateMyContract</p>
-    </div>
-
-    <div className="footerLinks">
-      <a href="/about">About</a>
-      <a href="/privacy">Privacy</a>
-      <a href="/terms">Terms</a>
-      <a href="mailto:youremail@email.com">Contact</a>
-    </div>
-  </div>
-</footer>
+}
