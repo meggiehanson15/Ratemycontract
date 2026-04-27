@@ -1,6 +1,5 @@
 // app/reviews/page.tsx
 import Link from "next/link";
-import HospitalAverages from "./HospitalAverages";
 import ReviewsClient from "./ReviewsClient";
 import { supabaseServer } from "@/lib/supabaseServer";
 
@@ -19,10 +18,9 @@ export type ReviewRow = {
   rating: number | null;
 };
 
-// ✅ In your Next.js 16 setup, searchParams can be a Promise
 type SearchParamsMaybePromise =
-  | { q?: string }
-  | Promise<{ q?: string }>;
+  | { q?: string; rating?: string }
+  | Promise<{ q?: string; rating?: string }>;
 
 export default async function ReviewsPage({
   searchParams,
@@ -30,11 +28,13 @@ export default async function ReviewsPage({
   searchParams?: SearchParamsMaybePromise;
 }) {
   const resolved = await Promise.resolve(searchParams as any);
+
   const q = String(resolved?.q ?? "").trim();
+  const ratingParam = String(resolved?.rating ?? "").trim();
 
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("reviews")
     .select(
       "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,review,rating"
@@ -42,22 +42,29 @@ export default async function ReviewsPage({
     .order("created_at", { ascending: false })
     .limit(300);
 
+  if (ratingParam === "5") {
+    query = query.eq("rating", 5);
+  }
+
+  if (ratingParam === "2") {
+    query = query.lte("rating", 2);
+  }
+
+  const { data, error } = await query;
+
   if (error) {
     console.error("getReviews error:", error.message);
+
     return (
       <section>
         <div className="pageHeader">
-          <div className="rowWrap" style={{ marginBottom: 10 }}>
-            <Link className="pill" href="/">
-              ← Home
-            </Link>
-          </div>
+          <Link className="pill" href="/">
+            ← Home
+          </Link>
 
           <h1 className="pageTitle">Reviews</h1>
           <p className="pageSubtitle">Could not load reviews.</p>
         </div>
-
-        <HospitalAverages />
       </section>
     );
   }
@@ -82,13 +89,15 @@ export default async function ReviewsPage({
             </div>
 
             <h1 className="pageTitle">Reviews</h1>
+
             <p className="pageSubtitle">
-              Search ranks best matches first (hospital, city/state, unit, agency, review text).
+              {reviews.length} review{reviews.length === 1 ? "" : "s"} shown.
+              Reviews reflect individual experiences and are not independently verified.
             </p>
           </div>
 
           <Link className="pill pillPrimary" href="/submit">
-            Submit a Review
+            <strong>Share Your Contract Experience</strong>
           </Link>
         </div>
 
@@ -97,25 +106,55 @@ export default async function ReviewsPage({
             className="input"
             name="q"
             defaultValue={q}
-            placeholder="Search: Palmdale • Denver • Aberdeen • ICU • Aya…"
+            placeholder="Search hospital, city, unit, or agency..."
             aria-label="Search reviews"
           />
+
           <button className="button" type="submit">
             Search
           </button>
 
-          {q ? (
-            <Link className="pill" href="/reviews" aria-label="Clear search">
+          {(q || ratingParam) && (
+            <Link className="pill" href="/reviews">
               Clear
             </Link>
-          ) : null}
+          )}
         </form>
+
+        <div className="rowWrap" style={{ marginTop: 12 }}>
+          <Link className="chip" href="/reviews?rating=5">
+            ⭐ Top Rated
+          </Link>
+
+          <Link className="chip" href="/reviews?rating=2">
+            ⚠️ Low Rated
+          </Link>
+        </div>
+
+        {ratingParam === "5" && (
+          <p className="kicker resultsMeta">Showing 5-star reviews</p>
+        )}
+
+        {ratingParam === "2" && (
+          <p className="kicker resultsMeta">
+            Showing reviews rated 2 stars or lower
+          </p>
+        )}
       </div>
 
-      <HospitalAverages />
+      {reviews.length === 0 ? (
+        <div className="card cardPad">
+          <p className="sub">
+            No reviews yet for this filter — help another nurse by adding one.
+          </p>
 
-      {/* ✅ Pass query down so the client can sort */}
-      <ReviewsClient reviews={reviewsForClient as any} query={q} />
+          <Link className="pill pillPrimary" href="/submit">
+            Share Your Contract Experience
+          </Link>
+        </div>
+      ) : (
+        <ReviewsClient reviews={reviewsForClient as any} query={q} />
+      )}
     </section>
   );
 }

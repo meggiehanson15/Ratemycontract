@@ -67,4 +67,23 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+}<footer className="footer">
+  <div className="footerInner">
+    <div className="footerLeft">
+      <div className="footerBrand">RateMyContract</div>
+
+      <p className="footerNote">
+        Reviews reflect individual experiences and are not independently verified.
+      </p>
+
+      <p className="footerCopy">© 2026 RateMyContract</p>
+    </div>
+
+    <div className="footerLinks">
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy</a>
+      <a href="/terms">Terms</a>
+      <a href="mailto:youremail@email.com">Contact</a>
+    </div>
+  </div>
+</footer>

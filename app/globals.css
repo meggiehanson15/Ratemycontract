@@ -547,3 +547,30 @@ button.pill:disabled{
   color: #475569;
 }
 }
+/* Keep clicked/visited pill links from changing appearance */
+.pill:visited,
+.pill:active,
+.pill:focus {
+  color: var(--text);
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  text-decoration: none;
+}
+
+/* Keep primary pill consistent too */
+.pillPrimary:visited,
+.pillPrimary:active,
+.pillPrimary:focus {
+  color: var(--text);
+  border-color: rgba(69,199,199,.60);
+  background: rgba(69,199,199,.18);
+  text-decoration: none;
+}
+
+/* Remove underline from app-style buttons */
+.pill:hover,
+.pill:visited,
+.pillPrimary:hover,
+.pillPrimary:visited {
+  text-decoration: none;
+}
