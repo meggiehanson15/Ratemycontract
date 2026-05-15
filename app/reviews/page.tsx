@@ -5,50 +5,51 @@ import { supabaseServer } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 
-export type ReviewRow = {
-  id: number;
-  created_at: string | null;
-  hospital: string | null;
-  city_state: string | null;
-  unit: string | null;
-  agency: string | null;
-  pay: string | null;
-  assignment_length: string | null;
-  review: string | null;
-  rating: number | null;
-};
+const states = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
+  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
+  "VA","WA","WV","WI","WY"
+];
 
-type SearchParamsMaybePromise =
-  | { q?: string; rating?: string }
-  | Promise<{ q?: string; rating?: string }>;
+const specialties = [
+  "ICU",
+  "ER",
+  "PACU",
+  "Med Surg",
+  "Telemetry",
+  "OR",
+  "Labor & Delivery",
+  "NICU",
+  "Pediatrics",
+  "Oncology",
+  "Stepdown",
+  "CVICU",
+  "Psych",
+  "Rehab",
+  "Long Term Care",
+];
 
-export default async function ReviewsPage({
-  searchParams,
-}: {
-  searchParams?: SearchParamsMaybePromise;
-}) {
-  const resolved = await Promise.resolve(searchParams as any);
+export default async function ReviewsPage({ searchParams }: any) {
+  const resolved = await Promise.resolve(searchParams);
 
   const q = String(resolved?.q ?? "").trim();
   const ratingParam = String(resolved?.rating ?? "").trim();
+  const stateFilter = String(resolved?.state ?? "").trim();
+  const specialtyFilter = String(resolved?.specialty ?? "").trim();
 
   const supabase = supabaseServer();
 
   let query = supabase
     .from("reviews")
     .select(
-      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,review,rating"
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating"
     )
     .order("created_at", { ascending: false })
     .limit(300);
 
-  if (ratingParam === "5") {
-    query = query.eq("rating", 5);
-  }
-
-  if (ratingParam === "2") {
-    query = query.lte("rating", 2);
-  }
+  if (ratingParam === "5") query = query.eq("rating", 5);
+  if (ratingParam === "2") query = query.lte("rating", 2);
 
   const { data, error } = await query;
 
@@ -58,10 +59,7 @@ export default async function ReviewsPage({
     return (
       <section>
         <div className="pageHeader">
-          <Link className="pill" href="/">
-            ← Home
-          </Link>
-
+          <Link className="pill" href="/">← Home</Link>
           <h1 className="pageTitle">Reviews</h1>
           <p className="pageSubtitle">Could not load reviews.</p>
         </div>
@@ -69,12 +67,7 @@ export default async function ReviewsPage({
     );
   }
 
-  const reviews: ReviewRow[] = Array.isArray(data) ? (data as ReviewRow[]) : [];
-
-  const reviewsForClient = reviews.map((r) => ({
-    ...r,
-    created_at: r.created_at ?? undefined,
-  }));
+  const reviews = Array.isArray(data) ? data : [];
 
   return (
     <section>
@@ -82,9 +75,7 @@ export default async function ReviewsPage({
         <div className="pageHeaderTop">
           <div>
             <div className="rowWrap" style={{ marginBottom: 10 }}>
-              <Link className="pill" href="/">
-                ← Home
-              </Link>
+              <Link className="pill" href="/">← Home</Link>
               <span className="kicker">Anonymous • No login required</span>
             </div>
 
@@ -92,7 +83,7 @@ export default async function ReviewsPage({
 
             <p className="pageSubtitle">
               {reviews.length} review{reviews.length === 1 ? "" : "s"} shown.
-              Reviews reflect individual experiences and are not independently verified.
+              Search by hospital, city, state, specialty, agency, or charting system.
             </p>
           </div>
 
@@ -106,15 +97,29 @@ export default async function ReviewsPage({
             className="input"
             name="q"
             defaultValue={q}
-            placeholder="Search hospital, city, unit, or agency..."
+            placeholder="Search hospital, city, agency, charting system..."
             aria-label="Search reviews"
           />
 
+          <select className="input" name="state" defaultValue={stateFilter}>
+            <option value="">All states</option>
+            {states.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+
+          <select className="input" name="specialty" defaultValue={specialtyFilter}>
+            <option value="">All specialties</option>
+            {specialties.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+
           <button className="button" type="submit">
-            Search
+            Filter
           </button>
 
-          {(q || ratingParam) && (
+          {(q || ratingParam || stateFilter || specialtyFilter) && (
             <Link className="pill" href="/reviews">
               Clear
             </Link>
@@ -140,6 +145,15 @@ export default async function ReviewsPage({
             Showing reviews rated 2 stars or lower
           </p>
         )}
+
+        {(q || stateFilter || specialtyFilter) && (
+          <p className="kicker resultsMeta">
+            Showing results
+            {q ? ` for “${q}”` : ""}
+            {stateFilter ? ` in ${stateFilter}` : ""}
+            {specialtyFilter ? ` for ${specialtyFilter}` : ""}
+          </p>
+        )}
       </div>
 
       {reviews.length === 0 ? (
@@ -153,7 +167,12 @@ export default async function ReviewsPage({
           </Link>
         </div>
       ) : (
-        <ReviewsClient reviews={reviewsForClient as any} query={q} />
+        <ReviewsClient
+          reviews={reviews as any}
+          query={q}
+          stateFilter={stateFilter}
+          specialtyFilter={specialtyFilter}
+        />
       )}
     </section>
   );

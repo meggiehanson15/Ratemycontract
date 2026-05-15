@@ -1,84 +1,139 @@
 "use client";
 
-import { useMemo } from "react";
+import Link from "next/link";
 
-export default function ReviewsClient({ reviews, query }: any) {
-  const q = (query || "").toLowerCase().trim();
+function normalize(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
 
-  // helper: extract state from "City, ST"
-  function getState(cityState: string | null) {
-    if (!cityState) return "";
-    const parts = cityState.split(",");
-    return parts.length > 1 ? parts[1].trim().toLowerCase() : "";
-  }
+function matchesSpecialty(unitValue: string, specialtyValue: string) {
+  const unit = normalize(unitValue);
+  const specialty = normalize(specialtyValue);
 
-  // helper: convert state abbreviation to full name
-  const stateMap: Record<string, string> = {
-    ca: "california",
-    tx: "texas",
-    fl: "florida",
-    ny: "new york",
-    az: "arizona",
-    wa: "washington",
-    co: "colorado",
-    nv: "nevada",
-    or: "oregon",
-    ut: "utah",
-    sd: "south dakota",
-    nd: "north dakota",
-    mn: "minnesota",
-    wi: "wisconsin",
-    il: "illinois",
-    ga: "georgia",
-    nc: "north carolina",
-    sc: "south carolina",
+  if (!specialty) return true;
+
+  const aliases: Record<string, string[]> = {
+    or: ["or", "operating room"],
+    er: ["er", "ed", "emergency room", "emergency department"],
+    icu: ["icu", "intensive care"],
+    pacu: ["pacu"],
+    "med surg": ["med surg", "medical surgical", "medsurg"],
+    telemetry: ["telemetry", "tele"],
+    "labor delivery": ["labor delivery", "l d", "ld", "labor and delivery"],
+    nicu: ["nicu"],
+    pediatrics: ["pediatrics", "peds"],
+    oncology: ["oncology"],
+    stepdown: ["stepdown", "step down", "pcu"],
+    cvicu: ["cvicu"],
+    psych: ["psych", "psychiatric"],
+    rehab: ["rehab", "rehabilitation"],
+    "long term care": ["long term care", "ltc"],
   };
 
-  const filtered = useMemo(() => {
-    if (!q) return reviews;
+  const possibleMatches = aliases[specialty] || [specialty];
 
-    return reviews.filter((r: any) => {
-      const hospital = (r.hospital || "").toLowerCase();
-      const cityState = (r.city_state || "").toLowerCase();
-      const review = (r.review || "").toLowerCase();
+  return possibleMatches.some((match) => {
+    const normalizedMatch = normalize(match);
+    return unit === normalizedMatch || unit.split(" ").includes(normalizedMatch);
+  });
+}
 
-      const stateAbbr = getState(r.city_state);
-      const stateFull = stateMap[stateAbbr] || "";
+export default function ReviewsClient({
+  reviews,
+  query,
+  stateFilter,
+  specialtyFilter,
+}: any) {
+  const q = (query || "").toLowerCase().trim();
+  const state = (stateFilter || "").toLowerCase().trim();
+  const specialty = specialtyFilter || "";
 
-      return (
-        hospital.includes(q) ||
-        cityState.includes(q) ||
-        review.includes(q) ||
-        stateAbbr.includes(q) ||
-        stateFull.includes(q)
-      );
-    });
-  }, [reviews, q]);
+  const filtered = reviews.filter((r: any) => {
+    const hospital = (r.hospital || "").toLowerCase();
+    const cityState = (r.city_state || "").toLowerCase();
+    const unit = r.unit || "";
+    const agency = (r.agency || "").toLowerCase();
+    const review = (r.review || "").toLowerCase();
+    const charting = (r.charting_system || "").toLowerCase();
+
+    const matchesSearch =
+      !q ||
+      hospital.includes(q) ||
+      cityState.includes(q) ||
+      unit.toLowerCase().includes(q) ||
+      agency.includes(q) ||
+      review.includes(q) ||
+      charting.includes(q);
+
+    const matchesState = !state || cityState.includes(state);
+
+    const matchesUnit = matchesSpecialty(unit, specialty);
+
+    return matchesSearch && matchesState && matchesUnit;
+  });
+
+  if (filtered.length === 0) {
+    return (
+      <div className="card cardPad">
+        <p className="sub">
+          No reviews match this filter — help another nurse by adding one.
+        </p>
+
+        <Link className="pill pillPrimary" href="/submit">
+          Share Your Contract Experience
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="reviewsGrid">
       {filtered.map((r: any) => (
-        <div key={r.id} className="reviewCard">
-          <div className="reviewTop">
-            <div>
-              <div className="reviewHospital">
-                {r.hospital || "Unknown Hospital"}
+        <Link
+          key={r.id}
+          href={`/reviews/${r.id}`}
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <div className="reviewCard" style={{ cursor: "pointer" }}>
+            <div className="reviewTop">
+              <div>
+                <div className="reviewHospital">
+                  {r.hospital || "Unknown Hospital"}
+                </div>
+
+                <div className="reviewMeta">
+                  {r.city_state || "Unknown location"}
+                  {r.unit ? ` • ${r.unit}` : ""}
+                </div>
               </div>
 
-              <div className="reviewMeta">
-                {r.city_state}
-              </div>
+              <div className="reviewRight">⭐ {r.rating ?? "N/A"}</div>
             </div>
 
-            <div className="reviewRight">
-              ⭐ {r.rating ?? "N/A"}
+            <div className="reviewBadges">
+              {r.agency && <span className="badge">{r.agency}</span>}
+              {r.pay && <span className="badge">{r.pay}</span>}
+              {r.assignment_length && (
+                <span className="badge">{r.assignment_length}</span>
+              )}
+              {r.charting_system && (
+                <span className="badge">{r.charting_system}</span>
+              )}
+            </div>
+
+            <p className="reviewText">
+              {r.review
+                ? r.review.length > 180
+                  ? r.review.slice(0, 180) + "..."
+                  : r.review
+                : "No review text provided."}
+            </p>
+
+            <div className="reviewBottom">
+              <span className="reviewLink">Read full review →</span>
             </div>
           </div>
-
-          <p className="reviewText">
-            {r.review?.slice(0, 180)}...
-          </p>
-        </div>
+        </Link>
       ))}
     </div>
   );
