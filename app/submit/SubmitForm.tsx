@@ -3,7 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-const states = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+const states = [
+  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"
+];
+
+const chartingSystems = [
+  "Epic",
+  "Cerner",
+  "Meditech",
+  "Allscripts",
+  "Athenahealth",
+  "PointClickCare",
+  "Homecare Homebase",
+  "Other",
+  "Not sure",
+];
 
 type Suggestions = {
   hospitals: string[];
@@ -18,6 +32,7 @@ export default function SubmitForm() {
   const [agency, setAgency] = useState("");
   const [pay, setPay] = useState("");
   const [assignmentLength, setAssignmentLength] = useState("");
+  const [chartingSystem, setChartingSystem] = useState("");
   const [review, setReview] = useState("");
   const [rating, setRating] = useState(0);
   const [website, setWebsite] = useState("");
@@ -113,6 +128,7 @@ export default function SubmitForm() {
       agency: agency.trim() || null,
       pay: pay.trim() || null,
       assignment_length: assignmentLength.trim() || null,
+      charting_system: chartingSystem || null,
       review: review.trim(),
       rating,
     });
@@ -132,6 +148,7 @@ export default function SubmitForm() {
     setAgency("");
     setPay("");
     setAssignmentLength("");
+    setChartingSystem("");
     setReview("");
     setRating(0);
     setMessage("Review submitted successfully.");
@@ -248,6 +265,22 @@ export default function SubmitForm() {
         <div>
           <label className="fieldLabel">Assignment Length</label>
           <input className="input" value={assignmentLength} onChange={(e) => setAssignmentLength(e.target.value)} placeholder="Example: 13 weeks" />
+        </div>
+
+        <div>
+          <label className="fieldLabel">Charting System</label>
+          <select
+            className="input"
+            value={chartingSystem}
+            onChange={(e) => setChartingSystem(e.target.value)}
+          >
+            <option value="">Select charting system</option>
+            {chartingSystems.map((system) => (
+              <option key={system} value={system}>
+                {system}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 

@@ -574,3 +574,12 @@ button.pill:disabled{
 .pillPrimary:visited {
   text-decoration: none;
 }
+select.input {
+  background: #0f172a;
+  color: white;
+}
+
+select.input option {
+  background: #0f172a;
+  color: white;
+}
