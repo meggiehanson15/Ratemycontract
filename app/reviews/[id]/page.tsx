@@ -1,217 +1,206 @@
-// app/reviews/[id]/page.tsx
+"use client";
+
 import Link from "next/link";
-import CopyLinkButton from "@/app/components/CopyLinkButton";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabaseServer } from "@/lib/supabaseServer";
 
-export const dynamic = "force-dynamic";
+type Review = {
+  id: number;
+  created_at: string | null;
+  hospital: string | null;
+  city_state: string | null;
+  unit: string | null;
+  agency: string | null;
+  pay: string | null;
+  assignment_length: string | null;
+  charting_system: string | null;
+  review: string | null;
+  rating: number | null;
+  helpful_count: number | null;
+  not_helpful_count: number | null;
+};
 
-type ParamsMaybePromise = { id: string } | Promise<{ id: string }>;
+export default function ReviewDetailPage() {
+  const params = useParams();
+  const id = Number(params?.id);
 
-/* ---------- Helpers ---------- */
-function safeText(v: unknown) {
-  if (typeof v !== "string") return "";
-  return v.trim();
-}
+  const [review, setReview] = useState<Review | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [vote, setVote] = useState<"yes" | "no" | null>(null);
+  const [savingVote, setSavingVote] = useState(false);
 
-function cleanCityState(v: unknown) {
-  // Keep it simple & backwards compatible:
-  // - normalize commas/spaces like "Aberdeen,sd" -> "Aberdeen, sd" (we won't force state caps here)
-  // because new entries will already be saved as "City, ST"
-  const s = safeText(v);
-  if (!s) return "";
-  return s.replace(/\s*,\s*/g, ", ").replace(/\s+/g, " ").trim();
-}
+  useEffect(() => {
+    async function loadReview() {
+      const supabase = supabaseServer();
 
-/* ---------- Stars ---------- */
-function Stars({ rating }: { rating?: number | null }) {
-  if (typeof rating !== "number") {
-    return <span className="kicker">—</span>;
+      const { data, error } = await supabase
+        .from("reviews")
+        .select(
+          "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count"
+        )
+        .eq("id", id)
+        .single();
+
+      if (error) {
+        console.error("Review detail error:", error.message);
+      }
+
+      setReview(data as Review | null);
+      setLoading(false);
+
+      const storedVote = localStorage.getItem(`reviewVote-${id}`);
+
+      if (storedVote === "yes" || storedVote === "no") {
+        setVote(storedVote);
+      }
+    }
+
+    if (id) loadReview();
+  }, [id]);
+
+  async function handleVote(voteType: "yes" | "no") {
+    if (!review || vote || savingVote) return;
+
+    setSavingVote(true);
+
+    const nextHelpful =
+      voteType === "yes"
+        ? Number(review.helpful_count || 0) + 1
+        : Number(review.helpful_count || 0);
+
+    const nextNotHelpful =
+      voteType === "no"
+        ? Number(review.not_helpful_count || 0) + 1
+        : Number(review.not_helpful_count || 0);
+
+    setReview({
+      ...review,
+      helpful_count: nextHelpful,
+      not_helpful_count: nextNotHelpful,
+    });
+
+    setVote(voteType);
+    localStorage.setItem(`reviewVote-${review.id}`, voteType);
+
+    const supabase = supabaseServer();
+
+    const { error } = await supabase
+      .from("reviews")
+      .update({
+        helpful_count: nextHelpful,
+        not_helpful_count: nextNotHelpful,
+      })
+      .eq("id", review.id);
+
+    if (error) {
+      console.error("Vote error:", error.message);
+    }
+
+    setSavingVote(false);
   }
 
-  const r = Math.max(1, Math.min(5, Math.round(rating)));
-
-  return (
-    <span className="stars" aria-label={`${r} out of 5 stars`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span
-          key={i}
-          className={i < r ? "starOn" : "starOff"}
-          aria-hidden="true"
-        >
-          ★
-        </span>
-      ))}
-      <span className="kicker" style={{ marginLeft: 10 }}>
-        {r}/5
-      </span>
-    </span>
-  );
-}
-
-/* ---------- Page ---------- */
-export default async function ReviewDetailPage({
-  params,
-}: {
-  params: ParamsMaybePromise;
-}) {
-  const resolvedParams = await Promise.resolve(params as any);
-  const rawId = String(resolvedParams?.id ?? "").trim();
-
-  /* ---------- Invalid ID ---------- */
-  if (!rawId || !/^\d+$/.test(rawId)) {
+  if (loading) {
     return (
-      <section>
-        <div className="rowWrap" style={{ marginTop: 18 }}>
-          <Link className="pill" href="/reviews">
-            ← Back to reviews
-          </Link>
-        </div>
-
-        <div className="card cardPad" style={{ marginTop: 14 }}>
-          <div className="h1" style={{ fontSize: 20 }}>
-            Review not found
-          </div>
-
-          <p className="sub">
-            Invalid review id: <strong>{rawId || "(empty)"}</strong>
-          </p>
-
-          <p className="kicker">
-            Debug param received: <code>{String(resolvedParams?.id ?? "")}</code>
-          </p>
-        </div>
+      <section className="card cardPad">
+        <p className="sub">Loading review...</p>
       </section>
     );
   }
 
-  const supabase = supabaseServer();
-
-  const { data, error } = await supabase
-    .from("reviews")
-    .select(
-      "id, created_at, city_state, hospital, unit, rating, assignment_length, review, agency, pay"
-    )
-    .eq("id", rawId)
-    .single();
-
-  /* ---------- Not Found ---------- */
-  if (error || !data) {
+  if (!review) {
     return (
-      <section>
+      <section className="card cardPad">
         <Link className="pill" href="/reviews">
-          ← Back to reviews
+          ← Back to Reviews
         </Link>
 
-        <div className="card cardPad" style={{ marginTop: 14 }}>
-          <div className="h1" style={{ fontSize: 20 }}>
-            Review not found
-          </div>
-          <p className="sub">{error?.message ?? "No data returned"}</p>
-        </div>
+        <h1 className="pageTitle" style={{ marginTop: 16 }}>
+          Review not found
+        </h1>
       </section>
     );
   }
-
-  const hospital = safeText(data.hospital) || "Hospital / Facility";
-  const cityState = cleanCityState(data.city_state);
-  const unit = safeText(data.unit);
-
-  const posted = data.created_at
-    ? new Date(data.created_at).toLocaleString()
-    : "—";
-
-  const reviewText = safeText(data.review) || "No written review provided.";
-
-  // Build the subtitle cleanly with bullets only when needed
-  const subtitleParts = [cityState, unit].filter(Boolean);
-  const subtitle = subtitleParts.join(" • ");
-
-  /* ---------- Report Email ---------- */
-  const subject = encodeURIComponent(`Report review #${data.id}`);
-  const body = encodeURIComponent(
-    `Hi RateMyContract,
-
-I want to report review #${data.id}.
-
-Reason:
-
-Link:
-/reviews/${data.id}
-
-Thanks.`
-  );
 
   return (
     <section>
-      {/* Navigation */}
-      <div className="rowWrap" style={{ marginTop: 18 }}>
+      <div className="rowWrap" style={{ marginBottom: 14 }}>
         <Link className="pill" href="/reviews">
-          ← Back to reviews
+          ← Back to Reviews
         </Link>
 
-        <Link className="pill" href="/submit">
-          Submit another review
+        <Link className="pill pillPrimary" href="/submit">
+          Share Your Contract Experience
         </Link>
       </div>
 
-      {/* Card */}
-      <div className="card cardPad" style={{ marginTop: 14 }}>
+      <article className="card cardPad">
         <div className="detailTop">
           <div>
-            <h1 className="detailTitle">{hospital}</h1>
+            <h1 className="detailTitle">
+              {review.hospital || "Unknown Hospital"}
+            </h1>
 
-            {subtitle ? (
-              <p className="detailSubtitle">{subtitle}</p>
-            ) : (
-              <p className="detailSubtitle kicker">Location / unit not provided</p>
-            )}
-
-            <div className="rowWrap" style={{ marginTop: 10 }}>
-              {data.assignment_length ? (
-                <span className="badge">Length: {data.assignment_length}</span>
-              ) : null}
-
-              {data.agency ? <span className="badge">Agency: {data.agency}</span> : null}
-
-              {data.pay ? <span className="badge">Pay: {data.pay}</span> : null}
-            </div>
+            <p className="detailSubtitle">
+              {review.city_state || "Location not listed"}
+              {review.unit ? ` • ${review.unit}` : ""}
+            </p>
           </div>
 
           <div className="detailRight">
-            <Stars rating={data.rating} />
-            <div className="kicker" style={{ marginTop: 6 }}>
-              Posted: {posted}
+            <div className="stars">
+              {"⭐".repeat(Number(review.rating) || 0)}
             </div>
+
+            <p className="kicker" style={{ marginTop: 6 }}>
+              {review.rating ? `${review.rating}/5 rating` : "No rating listed"}
+            </p>
           </div>
         </div>
 
-        <div className="hr" />
+        <hr className="hr" />
 
-        <div>
-          <div className="kicker" style={{ marginBottom: 8 }}>
-            Written review
+        <div className="reviewBadges">
+          {review.agency && <span className="badge">{review.agency}</span>}
+          {review.pay && <span className="badge">{review.pay}</span>}
+          {review.assignment_length && (
+            <span className="badge">{review.assignment_length}</span>
+          )}
+          {review.charting_system && (
+            <span className="badge">{review.charting_system}</span>
+          )}
+        </div>
+
+        <div style={{ marginTop: 18 }}>
+          <p className="detailReview">
+            {review.review || "No review text provided."}
+          </p>
+        </div>
+
+        <div className="detailVoteWrap">
+          <div className="voteBox">
+            <span className="voteQuestion">Was this helpful?</span>
+
+            <button
+              type="button"
+              className={`voteBtn ${vote === "yes" ? "voteBtnActive" : ""}`}
+              onClick={() => handleVote("yes")}
+              disabled={Boolean(vote) || savingVote}
+            >
+              Yes {review.helpful_count || 0}
+            </button>
+
+            <button
+              type="button"
+              className={`voteBtn ${vote === "no" ? "voteBtnActive" : ""}`}
+              onClick={() => handleVote("no")}
+              disabled={Boolean(vote) || savingVote}
+            >
+              No {review.not_helpful_count || 0}
+            </button>
           </div>
-
-          <p className="detailReview">{reviewText}</p>
         </div>
-
-        <div className="hr" />
-
-        <div className="detailActions rowWrap">
-          <a
-            className="pill"
-            href={`mailto:ratemycontractsite@gmail.com?subject=${subject}&body=${body}`}
-          >
-            Report this review
-          </a>
-
-          <CopyLinkButton />
-        </div>
-
-        <p className="kicker" style={{ marginTop: 10 }}>
-          Reviews are user-submitted and may not be verified.
-        </p>
-      </div>
+      </article>
     </section>
   );
 }

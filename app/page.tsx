@@ -39,7 +39,7 @@ export default function HomePage() {
 
       const { data } = await supabase
         .from("reviews")
-        .select("id,hospital,city_state,unit,rating,created_at")
+        .select("id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count")
         .order("created_at", { ascending: false })
         .limit(8);
 
@@ -93,17 +93,11 @@ export default function HomePage() {
     if (e.key === "Escape") setOpen(false);
   }
 
-  const trendingHospitals = [
-    ...new Set(recentReviews.map((r) => r.hospital)),
-  ].slice(0, 5);
-
   return (
     <section className="homeShell">
-  <div className="backgroundOrb orb1" />
-  <div className="backgroundOrb orb2" />
-  <div className="backgroundOrb orb3" />
-
-  <div className="heroGlow" />
+      <div className="backgroundOrb orb1" />
+      <div className="backgroundOrb orb2" />
+      <div className="backgroundOrb orb3" />
       <div className="heroGlow" />
 
       <div className="heroBlock">
@@ -132,24 +126,34 @@ export default function HomePage() {
             <span>It only takes a minute</span>
           </Link>
         </div>
-
-        <div className="heroStats">
-          <div className="statCard">
-            <strong>{recentReviews.length || "New"}</strong>
-            <span>Recent reviews</span>
-          </div>
-
-          <div className="statCard">
-            <strong>Anonymous</strong>
-            <span>No login required</span>
-          </div>
-
-          <div className="statCard">
-            <strong>Searchable</strong>
-            <span>Hospitals, states, and specialties</span>
-          </div>
-        </div>
       </div>
+
+      {recentReviews.length > 0 && (
+        <section className="card cardPad featureCard">
+          <h2 style={{ marginBottom: 8 }}>Trending Contracts</h2>
+
+          <p className="kicker" style={{ marginBottom: 12 }}>
+            Recently shared contract experiences from travel nurses
+          </p>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            {recentReviews.slice(0, 4).map((review) => (
+              <Link
+                key={review.id}
+                href={`/reviews/${review.id}`}
+                className="pill trendLink"
+              >
+                <span>
+                  {review.hospital}
+                  {review.city_state ? ` • ${review.city_state}` : ""}
+                  {review.unit ? ` • ${review.unit}` : ""}
+                </span>
+                <span>{"⭐".repeat(Number(review.rating) || 0)}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div ref={wrapRef} className="card cardPad searchFeature">
         <form action="/reviews" method="GET">
@@ -218,29 +222,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {trendingHospitals.length > 0 && (
-        <section className="card cardPad featureCard">
-          <h2 style={{ marginBottom: 8 }}>Trending Hospitals</h2>
-
-          <p className="kicker" style={{ marginBottom: 12 }}>
-            Most active hospitals based on recent reviews
-          </p>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            {trendingHospitals.map((hospital) => (
-              <Link
-                key={hospital}
-                href={`/reviews?q=${encodeURIComponent(hospital)}`}
-                className="pill trendLink"
-              >
-                <span>{hospital}</span>
-                <span>→</span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="card cardPad featureCard">
         <h2>Support RateMyContract</h2>
 
@@ -252,7 +233,7 @@ export default function HomePage() {
         <div className="rowWrap">
           <a
             className="pill pillPrimary"
-            href="https://venmo.com/ratemycontract"
+            href="https://venmo.com/YOURUSERNAME"
             target="_blank"
             rel="noopener noreferrer"
           >

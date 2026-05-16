@@ -1017,3 +1017,90 @@ body {
     0 0 14px #8ef2f2,
     0 0 24px #8ef2f2;
 }
+.voteBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  padding: 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.045);
+}
+
+.voteQuestion {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,.68);
+  padding: 0 4px;
+}
+
+.voteBtn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid rgba(69,199,199,.30);
+  background: rgba(69,199,199,.08);
+  color: rgba(255,255,255,.88);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.voteBtn:hover {
+  background: rgba(69,199,199,.16);
+  border-color: rgba(69,199,199,.55);
+}
+
+.voteBtnActive {
+  background: rgba(69,199,199,.22);
+  border-color: rgba(69,199,199,.70);
+}
+
+.voteBtn:disabled {
+  cursor: default;
+  opacity: .85;
+}
+
+.reviewBottom {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 640px) {
+  .voteBox {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 16px;
+  }
+
+  .voteQuestion {
+    width: 100%;
+  }
+}
+
+.detailVoteWrap {
+  margin-top: 22px;
+  display: flex;
+  justify-content: flex-start;
+}
+/* ===== MOBILE ===== */
+
+@media (max-width: 640px) {
+  .voteBox {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 16px;
+  }
+
+  .voteQuestion {
+    width: 100%;
+  }
+}
