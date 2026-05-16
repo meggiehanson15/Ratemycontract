@@ -21,15 +21,16 @@ type RecentReview = {
 export default function HomePage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestions>({
     hospitals: [],
     cities: [],
   });
+
   const [recentReviews, setRecentReviews] = useState<RecentReview[]>([]);
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+
   const trimmed = useMemo(() => q.trim(), [q]);
 
   useEffect(() => {
@@ -70,8 +71,8 @@ export default function HomePage() {
         const json = await res.json();
 
         setSuggestions({
-          hospitals: json?.hospitals || [],
-          cities: json?.cities || [],
+          hospitals: Array.isArray(json?.hospitals) ? json.hospitals : [],
+          cities: Array.isArray(json?.cities) ? json.cities : [],
         });
       } catch {
         setSuggestions({ hospitals: [], cities: [] });
@@ -97,37 +98,60 @@ export default function HomePage() {
   ].slice(0, 5);
 
   return (
-    <section style={{ padding: "38px 0 10px" }}>
-      {/* HERO */}
-      <div style={{ maxWidth: 860 }}>
-        <h1 className="h1" style={{ fontSize: 54 }}>
-          RateMyContract
-        </h1>
+    <section className="homeShell">
+  <div className="backgroundOrb orb1" />
+  <div className="backgroundOrb orb2" />
+  <div className="backgroundOrb orb3" />
 
-        <p className="sub" style={{ maxWidth: 720 }}>
-          Check the contract before you sign. Real travel nurse experiences —
-          pay, units, and what it's actually like.
+  <div className="heroGlow" />
+      <div className="heroGlow" />
+
+      <div className="heroBlock">
+        <p className="heroBadge">Built by a travel nurse, for travel nurses</p>
+
+        <h1 className="h1 heroTitle">RateMyContract</h1>
+
+        <p className="sub heroSubtitle">
+          Stop walking into contracts blind. See real travel nurse experiences
+          about hospitals, pay, units, charting systems, and assignment details
+          before you sign.
         </p>
 
-        <div className="rowWrap" style={{ marginTop: 14 }}>
-          <Link className="pill pillPrimary" href="/submit">
-            <strong>Share Your Contract Experience</strong>
-          </Link>
+        <div className="heroCtaPanel">
+          <div>
+            <p className="heroCtaEyebrow">Had a contract worth warning others about?</p>
+            <h2 className="heroCtaTitle">Share your experience anonymously.</h2>
+            <p className="heroCtaText">
+              Good, bad, or somewhere in between — your review can help another
+              nurse make a smarter decision.
+            </p>
+          </div>
 
-          <Link className="pill" href="/reviews">
-            See Real Reviews
+          <Link className="heroBigCTA" href="/submit">
+            Share Your Experience
+            <span>It only takes a minute</span>
           </Link>
+        </div>
 
-          <span className="kicker">Anonymous • No login required</span>
+        <div className="heroStats">
+          <div className="statCard">
+            <strong>{recentReviews.length || "New"}</strong>
+            <span>Recent reviews</span>
+          </div>
+
+          <div className="statCard">
+            <strong>Anonymous</strong>
+            <span>No login required</span>
+          </div>
+
+          <div className="statCard">
+            <strong>Searchable</strong>
+            <span>Hospitals, states, and specialties</span>
+          </div>
         </div>
       </div>
 
-      {/* SEARCH */}
-      <div
-        ref={wrapRef}
-        className="card cardPad"
-        style={{ maxWidth: 760, position: "relative", marginTop: 20 }}
-      >
+      <div ref={wrapRef} className="card cardPad searchFeature">
         <form action="/reviews" method="GET">
           <div className="row">
             <input
@@ -140,20 +164,37 @@ export default function HomePage() {
               }}
               onFocus={() => setOpen(true)}
               onKeyDown={onKeyDown}
-              placeholder="Search hospital or city"
+              placeholder="Search hospital, city, state, specialty..."
               className="input"
+              autoComplete="off"
             />
 
             <button className="button">Search</button>
           </div>
+
+          <div className="rowWrap" style={{ marginTop: 12 }}>
+            <Link className="chip" href="/reviews?rating=5">
+              ⭐ Top Rated
+            </Link>
+
+            <Link className="chip" href="/reviews?rating=2">
+              Low Rated
+            </Link>
+          </div>
+
+          <p className="kicker" style={{ marginTop: 12 }}>
+            Anonymous reviews. No login required.
+          </p>
         </form>
 
         {open && trimmed.length >= 2 && (
           <div className="suggestions">
+            <div className="suggestionsHeader">Suggestions</div>
+
             <div className="suggestionsBody">
-              {suggestions.hospitals.map((h: string) => (
+              {suggestions.hospitals.map((h) => (
                 <button
-                  key={h}
+                  key={`h-${h}`}
                   type="button"
                   onClick={() => choose(h)}
                   className="suggestionsItem"
@@ -162,9 +203,9 @@ export default function HomePage() {
                 </button>
               ))}
 
-              {suggestions.cities.map((c: string) => (
+              {suggestions.cities.map((c) => (
                 <button
-                  key={c}
+                  key={`c-${c}`}
                   type="button"
                   onClick={() => choose(c)}
                   className="suggestionsItem"
@@ -177,10 +218,9 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* TRENDING */}
       {trendingHospitals.length > 0 && (
-        <section className="card cardPad" style={{ maxWidth: 760, marginTop: 20 }}>
-          <h2>🔥 Trending Hospitals</h2>
+        <section className="card cardPad featureCard">
+          <h2 style={{ marginBottom: 8 }}>Trending Hospitals</h2>
 
           <p className="kicker" style={{ marginBottom: 12 }}>
             Most active hospitals based on recent reviews
@@ -191,8 +231,7 @@ export default function HomePage() {
               <Link
                 key={hospital}
                 href={`/reviews?q=${encodeURIComponent(hospital)}`}
-                className="pill"
-                style={{ justifyContent: "space-between" }}
+                className="pill trendLink"
               >
                 <span>{hospital}</span>
                 <span>→</span>
@@ -202,13 +241,12 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* VENMO SUPPORT */}
-      <section className="card cardPad" style={{ maxWidth: 760, marginTop: 20 }}>
+      <section className="card cardPad featureCard">
         <h2>Support RateMyContract</h2>
 
         <p className="sub" style={{ marginBottom: 12 }}>
           If this site helped you avoid a bad contract or make a better decision,
-          you can support it below.
+          you can support keeping it available for other nurses.
         </p>
 
         <div className="rowWrap">
@@ -218,14 +256,18 @@ export default function HomePage() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            💙 Support via Venmo
+            Support via Venmo
           </a>
         </div>
 
         <p className="kicker" style={{ marginTop: 10 }}>
-          Completely optional — just helps keep the site running.
+          Completely optional — helps keep the site running.
         </p>
       </section>
+
+      <Link className="mobileStickyCTA" href="/submit">
+        Share Your Experience
+      </Link>
     </section>
   );
 }
