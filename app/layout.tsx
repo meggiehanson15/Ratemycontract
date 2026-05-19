@@ -13,6 +13,10 @@ export const metadata = {
   description:
     "Transparent travel nurse contract reviews — real experiences, real pay, real units.",
   metadataBase: new URL(siteUrl),
+
+  verification: {
+    google: "RjqevS6c3TLvEh34P6XmF62CX1V5fyPK8QDq6ORiroM",
+  },
 };
 
 export default function RootLayout({
@@ -22,23 +26,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <meta
-          name="google-site-verification"
-          content="RjqevS6c3TLvEh34P6XmF62CX1V5fyPK8QDq6ORiroM"
-        />
-      </head>
-
       <body>
         <header className="siteHeader">
           <div className="headerInner">
             <Link href="/" className="brand">
-              <div className="logoMark">RM</div>
-
-              <div className="brandText">
-                <strong>RateMyContract</strong>
-                <span>Honest travel nurse reviews</span>
-              </div>
+              <img
+                src="/logo.jpg"
+                alt="RateMyContract"
+                style={{
+                  height: 42,
+                  width: "auto",
+                  objectFit: "contain",
+                }}
+              />
             </Link>
 
             <nav className="nav">
