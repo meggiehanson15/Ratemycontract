@@ -23,6 +23,84 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
+const stateSlugMap: Record<string, string> = {
+  AL: "alabama",
+  AK: "alaska",
+  AZ: "arizona",
+  AR: "arkansas",
+  CA: "california",
+  CO: "colorado",
+  CT: "connecticut",
+  DE: "delaware",
+  FL: "florida",
+  GA: "georgia",
+  HI: "hawaii",
+  ID: "idaho",
+  IL: "illinois",
+  IN: "indiana",
+  IA: "iowa",
+  KS: "kansas",
+  KY: "kentucky",
+  LA: "louisiana",
+  ME: "maine",
+  MD: "maryland",
+  MA: "massachusetts",
+  MI: "michigan",
+  MN: "minnesota",
+  MS: "mississippi",
+  MO: "missouri",
+  MT: "montana",
+  NE: "nebraska",
+  NV: "nevada",
+  NH: "new-hampshire",
+  NJ: "new-jersey",
+  NM: "new-mexico",
+  NY: "new-york",
+  NC: "north-carolina",
+  ND: "north-dakota",
+  OH: "ohio",
+  OK: "oklahoma",
+  OR: "oregon",
+  PA: "pennsylvania",
+  RI: "rhode-island",
+  SC: "south-carolina",
+  SD: "south-dakota",
+  TN: "tennessee",
+  TX: "texas",
+  UT: "utah",
+  VT: "vermont",
+  VA: "virginia",
+  WA: "washington",
+  WV: "west-virginia",
+  WI: "wisconsin",
+  WY: "wyoming",
+};
+
+const unitSlugMap: Record<string, string> = {
+  icu: "icu",
+  er: "er",
+  ed: "er",
+  or: "or",
+  pacu: "pacu",
+  telemetry: "telemetry",
+  tele: "telemetry",
+  nicu: "nicu",
+  oncology: "oncology",
+  cvicu: "cvicu",
+  psych: "psych",
+  rehab: "rehab",
+  pcu: "stepdown",
+  stepdown: "stepdown",
+  "step down": "stepdown",
+  "med surg": "med-surg",
+  medsurg: "med-surg",
+  "medical surgical": "med-surg",
+  "labor delivery": "labor-delivery",
+  "labor and delivery": "labor-delivery",
+  "l&d": "labor-delivery",
+  ld: "labor-delivery",
+};
+
 function makeSlug(hospital: string | null, cityState: string | null) {
   return `${hospital || "unknown-hospital"}-${cityState || "unknown-location"}`
     .toLowerCase()
@@ -38,6 +116,34 @@ function formatDate(date: string | null) {
     month: "short",
     year: "numeric",
   });
+}
+
+function getStateFromCityState(cityState: string | null) {
+  if (!cityState) return null;
+
+  const abbreviation = cityState.split(",")[1]?.trim().toUpperCase();
+
+  if (!abbreviation) return null;
+
+  return {
+    abbreviation,
+    slug: stateSlugMap[abbreviation] || abbreviation.toLowerCase(),
+  };
+}
+
+function getUnitSlug(unit: string | null) {
+  if (!unit) return null;
+
+  const normalized = unit
+    .toLowerCase()
+    .replace(/[^a-z0-9& ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return (
+    unitSlugMap[normalized] ||
+    normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "")
+  );
 }
 
 async function getHospitalReviews(slug: string) {
@@ -71,10 +177,9 @@ export async function generateMetadata({
   }
 
   const first = reviews[0];
-  const title = `${first.hospital} ${first.city_state || ""} Travel Nurse Reviews | RateMyContract`;
 
   return {
-    title,
+    title: `${first.hospital} ${first.city_state || ""} Travel Nurse Reviews | RateMyContract`,
     description: `Read anonymous travel nurse contract reviews for ${
       first.hospital
     }${first.city_state ? ` in ${first.city_state}` : ""}. See ratings, units, pay details, charting systems, and assignment experiences.`,
@@ -91,7 +196,10 @@ export default async function HospitalPage({ params }: PageProps) {
 
   const firstReview = hospitalReviews[0];
 
+  const stateInfo = getStateFromCityState(firstReview.city_state);
+
   const ratingReviews = hospitalReviews.filter((review) => review.rating);
+
   const averageRating =
     ratingReviews.length > 0
       ? (
@@ -104,13 +212,13 @@ export default async function HospitalPage({ params }: PageProps) {
 
   const units = Array.from(
     new Set(hospitalReviews.map((review) => review.unit).filter(Boolean))
-  );
+  ) as string[];
 
   const chartingSystems = Array.from(
     new Set(
       hospitalReviews.map((review) => review.charting_system).filter(Boolean)
     )
-  );
+  ) as string[];
 
   return (
     <section>
@@ -134,6 +242,26 @@ export default async function HospitalPage({ params }: PageProps) {
           {firstReview.hospital || "this hospital"}
           {firstReview.city_state ? ` in ${firstReview.city_state}` : ""}.
         </p>
+
+        <div className="rowWrap" style={{ marginTop: 18 }}>
+          {stateInfo && (
+            <Link className="pill" href={`/states/${stateInfo.slug}`}>
+              {stateInfo.abbreviation} Reviews
+            </Link>
+          )}
+
+          {units.slice(0, 4).map((unit) => {
+            const unitSlug = getUnitSlug(unit);
+
+            if (!unitSlug) return null;
+
+            return (
+              <Link key={unit} className="pill" href={`/units/${unitSlug}`}>
+                {unit}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <section className="card cardPad" style={{ marginBottom: 16 }}>
@@ -156,7 +284,21 @@ export default async function HospitalPage({ params }: PageProps) {
 
         {units.length > 0 && (
           <p className="kicker" style={{ marginTop: 14 }}>
-            Units mentioned: {units.join(", ")}
+            Units mentioned:{" "}
+            {units.map((unit, index) => {
+              const unitSlug = getUnitSlug(unit);
+
+              return (
+                <span key={unit}>
+                  {unitSlug ? (
+                    <Link href={`/units/${unitSlug}`}>{unit}</Link>
+                  ) : (
+                    unit
+                  )}
+                  {index < units.length - 1 ? ", " : ""}
+                </span>
+              );
+            })}
           </p>
         )}
 
@@ -177,58 +319,85 @@ export default async function HospitalPage({ params }: PageProps) {
           >
             View in all reviews
           </Link>
+
+          {stateInfo && (
+            <Link className="pill" href={`/states/${stateInfo.slug}`}>
+              More {stateInfo.abbreviation} hospitals
+            </Link>
+          )}
         </div>
       </section>
 
       <div className="reviewsGrid">
-        {hospitalReviews.map((review) => (
-          <Link
-            key={review.id}
-            href={`/reviews/${review.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <div className="reviewCard">
-              <div className="reviewTop">
-                <div>
-                  <div className="reviewHospital">
-                    {review.hospital || "Unknown Hospital"}
+        {hospitalReviews.map((review) => {
+          const reviewState = getStateFromCityState(review.city_state);
+          const unitSlug = getUnitSlug(review.unit);
+
+          return (
+            <Link
+              key={review.id}
+              href={`/reviews/${review.id}`}
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="reviewCard">
+                <div className="reviewTop">
+                  <div>
+                    <div className="reviewHospital">
+                      {review.hospital || "Unknown Hospital"}
+                    </div>
+
+                    <div className="reviewMeta">
+                      {review.city_state || "Unknown location"}
+                      {review.unit ? ` • ${review.unit}` : ""}
+                      {review.created_at
+                        ? ` • ${formatDate(review.created_at)}`
+                        : ""}
+                    </div>
+
+                    <div className="rowWrap" style={{ marginTop: 8 }}>
+                      {reviewState && (
+                        <span className="chip">
+                          {reviewState.abbreviation}
+                        </span>
+                      )}
+
+                      {unitSlug && (
+                        <span className="chip">
+                          {review.unit}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="reviewMeta">
-                    {review.city_state || "Unknown location"}
-                    {review.unit ? ` • ${review.unit}` : ""}
-                    {review.created_at ? ` • ${formatDate(review.created_at)}` : ""}
-                  </div>
+                  <div className="reviewRight">⭐ {review.rating ?? "N/A"}</div>
                 </div>
 
-                <div className="reviewRight">⭐ {review.rating ?? "N/A"}</div>
-              </div>
+                <div className="reviewBadges">
+                  {review.agency && <span className="badge">{review.agency}</span>}
+                  {review.pay && <span className="badge">{review.pay}</span>}
+                  {review.assignment_length && (
+                    <span className="badge">{review.assignment_length}</span>
+                  )}
+                  {review.charting_system && (
+                    <span className="badge">{review.charting_system}</span>
+                  )}
+                </div>
 
-              <div className="reviewBadges">
-                {review.agency && <span className="badge">{review.agency}</span>}
-                {review.pay && <span className="badge">{review.pay}</span>}
-                {review.assignment_length && (
-                  <span className="badge">{review.assignment_length}</span>
-                )}
-                {review.charting_system && (
-                  <span className="badge">{review.charting_system}</span>
-                )}
-              </div>
+                <p className="reviewText">
+                  {review.review
+                    ? review.review.length > 180
+                      ? review.review.slice(0, 180) + "..."
+                      : review.review
+                    : "No review text provided."}
+                </p>
 
-              <p className="reviewText">
-                {review.review
-                  ? review.review.length > 180
-                    ? review.review.slice(0, 180) + "..."
-                    : review.review
-                  : "No review text provided."}
-              </p>
-
-              <div className="reviewBottom">
-                <span className="reviewLink">Read full review →</span>
+                <div className="reviewBottom">
+                  <span className="reviewLink">Read full review →</span>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

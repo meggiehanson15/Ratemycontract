@@ -9,6 +9,59 @@ function makeHospitalSlug(hospital: string | null, cityState: string | null) {
     .replace(/^-+|-+$/g, "");
 }
 
+const stateMap: Record<string, string> = {
+  AL: "alabama",
+  AK: "alaska",
+  AZ: "arizona",
+  AR: "arkansas",
+  CA: "california",
+  CO: "colorado",
+  CT: "connecticut",
+  DE: "delaware",
+  FL: "florida",
+  GA: "georgia",
+  HI: "hawaii",
+  ID: "idaho",
+  IL: "illinois",
+  IN: "indiana",
+  IA: "iowa",
+  KS: "kansas",
+  KY: "kentucky",
+  LA: "louisiana",
+  ME: "maine",
+  MD: "maryland",
+  MA: "massachusetts",
+  MI: "michigan",
+  MN: "minnesota",
+  MS: "mississippi",
+  MO: "missouri",
+  MT: "montana",
+  NE: "nebraska",
+  NV: "nevada",
+  NH: "new-hampshire",
+  NJ: "new-jersey",
+  NM: "new-mexico",
+  NY: "new-york",
+  NC: "north-carolina",
+  ND: "north-dakota",
+  OH: "ohio",
+  OK: "oklahoma",
+  OR: "oregon",
+  PA: "pennsylvania",
+  RI: "rhode-island",
+  SC: "south-carolina",
+  SD: "south-dakota",
+  TN: "tennessee",
+  TX: "texas",
+  UT: "utah",
+  VT: "vermont",
+  VA: "virginia",
+  WA: "washington",
+  WV: "west-virginia",
+  WI: "wisconsin",
+  WY: "wyoming",
+};
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.ratemycontract.co";
 
@@ -37,6 +90,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       : new Date(),
   }));
 
+  const uniqueStates = Array.from(
+    new Set(
+      reviews
+        .map((review) => {
+          const state = review.city_state?.split(",")[1]?.trim().toUpperCase();
+          return state && stateMap[state]
+            ? stateMap[state]
+            : null;
+        })
+        .filter(Boolean)
+    )
+  );
+
+  const stateUrls = uniqueStates.map((state) => ({
+    url: `${baseUrl}/states/${state}`,
+    lastModified: new Date(),
+  }));
+  const unitUrls = [
+  "icu",
+  "er",
+  "or",
+  "pacu",
+  "telemetry",
+  "med-surg",
+  "nicu",
+  "oncology",
+  "stepdown",
+  "cvicu",
+  "psych",
+  "rehab",
+  "labor-delivery",
+].map((unit) => ({
+  url: `${baseUrl}/units/${unit}`,
+  lastModified: new Date(),
+}));
+
   return [
     {
       url: baseUrl,
@@ -52,5 +141,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     ...hospitalUrls,
     ...reviewUrls,
+    ...stateUrls,
+    ...unitUrls,
   ];
 }
