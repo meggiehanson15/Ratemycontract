@@ -22,11 +22,19 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <meta
+          name="google-site-verification"
+          content="RjqevS6c3TLvEh34P6XmF62CX1V5fyPK8QDq6ORiroM"
+        />
+      </head>
+
       <body>
         <header className="siteHeader">
           <div className="headerInner">
             <Link href="/" className="brand">
               <div className="logoMark">RM</div>
+
               <div className="brandText">
                 <strong>RateMyContract</strong>
                 <span>Honest travel nurse reviews</span>
@@ -34,16 +42,24 @@ export default function RootLayout({
             </Link>
 
             <nav className="nav">
-              <Link className="pill" href="/">Home</Link>
-              <Link className="pill" href="/reviews">Reviews</Link>
-              <Link className="pill pillPrimary" href="/submit">
+              <Link className="pill" href="/">
+                Home
+              </Link>
+
+              <Link className="pill" href="/reviews">
+                Reviews
+              </Link>
+
+              <Link
+                className="pill pillPrimary"
+                href="/submit"
+              >
                 Submit a Review
               </Link>
             </nav>
           </div>
         </header>
 
-        {/* Global notice */}
         <div className="siteNotice">
           Reviews are anonymous user-submitted opinions and are not verified by
           RateMyContract. Do not include patient information (PHI).
@@ -54,10 +70,13 @@ export default function RootLayout({
         <footer className="footer">
           <div className="footerInner">
             <div className="footerLeft">
-              <div className="footerBrand">RateMyContract</div>
+              <div className="footerBrand">
+                RateMyContract
+              </div>
 
               <p className="footerNote">
-                Reviews reflect individual experiences and are not independently verified.
+                Reviews reflect individual experiences and are not independently
+                verified.
               </p>
 
               <p className="footerCopy">
@@ -74,7 +93,6 @@ export default function RootLayout({
           </div>
         </footer>
 
-        {/* ✅ Analytics added safely */}
         <Analytics />
       </body>
     </html>
