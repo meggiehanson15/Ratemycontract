@@ -1,8 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabaseServer } from "@/lib/supabaseServer";
+
+function makeHospitalSlug(hospital: string | null, cityState: string | null) {
+  return `${hospital || "unknown-hospital"}-${cityState || "unknown-location"}`
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 function normalize(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -63,16 +71,16 @@ export default function ReviewsClient({
       )
   );
 
-  const [clickedVotes, setClickedVotes] = useState<Record<number, "yes" | "no">>(
-    () => {
-      if (typeof window === "undefined") return {};
-      try {
-        return JSON.parse(localStorage.getItem("reviewVotes") || "{}");
-      } catch {
-        return {};
-      }
+  const [clickedVotes, setClickedVotes] = useState<Record<number, "yes" | "no">>({});
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("reviewVotes") || "{}");
+      setClickedVotes(stored);
+    } catch {
+      setClickedVotes({});
     }
-  );
+  }, []);
 
   async function vote(
     e: React.MouseEvent<HTMLButtonElement>,
@@ -109,10 +117,12 @@ export default function ReviewsClient({
 
     if (error) {
       console.error("Vote update error:", error.message);
+
       setVotes((prev) => ({ ...prev, [reviewId]: current }));
 
       const reverted = { ...nextClicked };
       delete reverted[reviewId];
+
       setClickedVotes(reverted);
       localStorage.setItem("reviewVotes", JSON.stringify(reverted));
     }
@@ -160,75 +170,76 @@ export default function ReviewsClient({
       {filtered.map((r: any) => {
         const reviewVotes = votes[r.id] || { yes: 0, no: 0 };
         const userVote = clickedVotes[r.id];
+        const hospitalSlug = makeHospitalSlug(r.hospital, r.city_state);
 
         return (
-          <Link
-            key={r.id}
-            href={`/reviews/${r.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
-          >
-            <div className="reviewCard" style={{ cursor: "pointer" }}>
-              <div className="reviewTop">
-                <div>
-                  <div className="reviewHospital">
-                    {r.hospital || "Unknown Hospital"}
-                  </div>
+          <div key={r.id} className="reviewCard" style={{ cursor: "default" }}>
+            <div className="reviewTop">
+              <div>
+                <Link
+                  href={`/hospitals/${hospitalSlug}`}
+                  className="reviewHospital"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
+                  {r.hospital || "Unknown Hospital"}
+                </Link>
 
-                  <div className="reviewMeta">
-                    {r.city_state || "Unknown location"}
-                    {r.unit ? ` • ${r.unit}` : ""}
-                  </div>
+                <div className="reviewMeta">
+                  {r.city_state || "Unknown location"}
+                  {r.unit ? ` • ${r.unit}` : ""}
                 </div>
-
-                <div className="reviewRight">⭐ {r.rating ?? "N/A"}</div>
               </div>
 
-              <div className="reviewBadges">
-                {r.agency && <span className="badge">{r.agency}</span>}
-                {r.pay && <span className="badge">{r.pay}</span>}
-                {r.assignment_length && (
-                  <span className="badge">{r.assignment_length}</span>
-                )}
-                {r.charting_system && (
-                  <span className="badge">{r.charting_system}</span>
-                )}
-              </div>
+              <div className="reviewRight">⭐ {r.rating ?? "N/A"}</div>
+            </div>
 
-              <p className="reviewText">
-                {r.review
-                  ? r.review.length > 180
-                    ? r.review.slice(0, 180) + "..."
-                    : r.review
-                  : "No review text provided."}
-              </p>
+            <div className="reviewBadges">
+              {r.agency && <span className="badge">{r.agency}</span>}
+              {r.pay && <span className="badge">{r.pay}</span>}
+              {r.assignment_length && (
+                <span className="badge">{r.assignment_length}</span>
+              )}
+              {r.charting_system && (
+                <span className="badge">{r.charting_system}</span>
+              )}
+            </div>
 
-              <div className="reviewBottom">
-                <span className="reviewLink">Read full review →</span>
+            <p className="reviewText">
+              {r.review
+                ? r.review.length > 180
+                  ? r.review.slice(0, 180) + "..."
+                  : r.review
+                : "No review text provided."}
+            </p>
 
-                <div className="voteBox" onClick={(e) => e.preventDefault()}>
-                  <span className="voteQuestion">Was this helpful?</span>
+            <div className="reviewBottom">
+              <Link className="reviewLink" href={`/reviews/${r.id}`}>
+                Read full review →
+              </Link>
 
-                  <button
-                    type="button"
-                    className={`voteBtn ${userVote === "yes" ? "voteBtnActive" : ""}`}
-                    onClick={(e) => vote(e, r.id, "yes")}
-                    disabled={Boolean(userVote)}
-                  >
-                    Yes {reviewVotes.yes}
-                  </button>
+              <div className="voteBox">
+                <span className="voteQuestion">Was this helpful?</span>
 
-                  <button
-                    type="button"
-                    className={`voteBtn ${userVote === "no" ? "voteBtnActive" : ""}`}
-                    onClick={(e) => vote(e, r.id, "no")}
-                    disabled={Boolean(userVote)}
-                  >
-                    No {reviewVotes.no}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  className={`voteBtn ${userVote === "yes" ? "voteBtnActive" : ""}`}
+                  onClick={(e) => vote(e, r.id, "yes")}
+                  disabled={Boolean(userVote)}
+                >
+                  Yes {reviewVotes.yes}
+                </button>
+
+                <button
+                  type="button"
+                  className={`voteBtn ${userVote === "no" ? "voteBtnActive" : ""}`}
+                  onClick={(e) => vote(e, r.id, "no")}
+                  disabled={Boolean(userVote)}
+                >
+                  No {reviewVotes.no}
+                </button>
               </div>
             </div>
-          </Link>
+          </div>
         );
       })}
     </div>

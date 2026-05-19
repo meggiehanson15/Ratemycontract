@@ -49,14 +49,24 @@ export default function ReviewDetailPage() {
       setReview(data as Review | null);
       setLoading(false);
 
-      const storedVote = localStorage.getItem(`reviewVote-${id}`);
+      try {
+        const storedVotes = JSON.parse(
+          localStorage.getItem("reviewVotes") || "{}"
+        );
 
-      if (storedVote === "yes" || storedVote === "no") {
-        setVote(storedVote);
+        const storedVote = storedVotes[id];
+
+        if (storedVote === "yes" || storedVote === "no") {
+          setVote(storedVote);
+        }
+      } catch {
+        setVote(null);
       }
     }
 
-    if (id) loadReview();
+    if (id) {
+      loadReview();
+    }
   }, [id]);
 
   async function handleVote(voteType: "yes" | "no") {
@@ -74,6 +84,8 @@ export default function ReviewDetailPage() {
         ? Number(review.not_helpful_count || 0) + 1
         : Number(review.not_helpful_count || 0);
 
+    const previousReview = review;
+
     setReview({
       ...review,
       helpful_count: nextHelpful,
@@ -81,7 +93,23 @@ export default function ReviewDetailPage() {
     });
 
     setVote(voteType);
-    localStorage.setItem(`reviewVote-${review.id}`, voteType);
+
+    let previousVotes = {};
+
+    try {
+      previousVotes = JSON.parse(
+        localStorage.getItem("reviewVotes") || "{}"
+      );
+    } catch {
+      previousVotes = {};
+    }
+
+    const nextVotes = {
+      ...previousVotes,
+      [review.id]: voteType,
+    };
+
+    localStorage.setItem("reviewVotes", JSON.stringify(nextVotes));
 
     const supabase = supabaseServer();
 
@@ -95,6 +123,10 @@ export default function ReviewDetailPage() {
 
     if (error) {
       console.error("Vote error:", error.message);
+
+      setReview(previousReview);
+      setVote(null);
+      localStorage.setItem("reviewVotes", JSON.stringify(previousVotes));
     }
 
     setSavingVote(false);
@@ -177,6 +209,15 @@ export default function ReviewDetailPage() {
           </p>
         </div>
 
+        <div className="rowWrap" style={{ marginTop: 22 }}>
+          <a
+            className="pill"
+            href={`mailto:YOUR_EMAIL@gmail.com?subject=Report Review ${review.id}&body=I would like to report this review:%0D%0A%0D%0AReview ID: ${review.id}%0D%0AHospital: ${review.hospital || "Unknown"}%0D%0AReason:%0D%0A`}
+          >
+            Report this review
+          </a>
+        </div>
+
         <div className="detailVoteWrap">
           <div className="voteBox">
             <span className="voteQuestion">Was this helpful?</span>
@@ -199,6 +240,45 @@ export default function ReviewDetailPage() {
               No {review.not_helpful_count || 0}
             </button>
           </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: 26,
+            paddingTop: 18,
+            borderTop: "1px solid rgba(255,255,255,.08)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontWeight: 800,
+                fontSize: 15,
+              }}
+            >
+              Worked this assignment too?
+            </p>
+
+            <p
+              className="kicker"
+              style={{
+                marginTop: 6,
+                maxWidth: 520,
+              }}
+            >
+              Help another travel nurse by sharing your experience anonymously.
+            </p>
+          </div>
+
+          <Link href="/submit" className="pill pillPrimary">
+            Submit a Review
+          </Link>
         </div>
       </article>
     </section>

@@ -44,40 +44,66 @@ export default function SubmitForm() {
     cities: [],
   });
 
-  const [activeDropdown, setActiveDropdown] = useState<"hospital" | "city" | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<
+    "hospital" | "city" | null
+  >(null);
+
   const wrapRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
     function close(e: MouseEvent) {
       if (!wrapRef.current) return;
+
       if (!wrapRef.current.contains(e.target as Node)) {
         setActiveDropdown(null);
       }
     }
 
     window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
+
+    return () =>
+      window.removeEventListener("mousedown", close);
   }, []);
 
   useEffect(() => {
-    const query = activeDropdown === "hospital" ? hospital.trim() : city.trim();
+    const query =
+      activeDropdown === "hospital"
+        ? hospital.trim()
+        : city.trim();
 
     const timer = setTimeout(async () => {
       if (query.length < 2) {
-        setSuggestions({ hospitals: [], cities: [] });
+        setSuggestions({
+          hospitals: [],
+          cities: [],
+        });
+
         return;
       }
 
       try {
-        const res = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
-        const json = (await res.json()) as Suggestions;
+        const res = await fetch(
+          `/api/suggestions?q=${encodeURIComponent(query)}`
+        );
+
+        const json =
+          (await res.json()) as Suggestions;
 
         setSuggestions({
-          hospitals: Array.isArray(json?.hospitals) ? json.hospitals : [],
-          cities: Array.isArray(json?.cities) ? json.cities : [],
+          hospitals: Array.isArray(
+            json?.hospitals
+          )
+            ? json.hospitals
+            : [],
+          cities: Array.isArray(json?.cities)
+            ? json.cities
+            : [],
         });
       } catch {
-        setSuggestions({ hospitals: [], cities: [] });
+        setSuggestions({
+          hospitals: [],
+          cities: [],
+        });
       }
     }, 200);
 
@@ -86,9 +112,11 @@ export default function SubmitForm() {
 
   function selectCity(value: string) {
     const parts = value.split(",");
+
     setCity(parts[0]?.trim() || value);
 
     const statePart = parts[1]?.trim();
+
     if (statePart && statePart.length === 2) {
       setStateName(statePart);
     }
@@ -96,24 +124,49 @@ export default function SubmitForm() {
     setActiveDropdown(null);
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    e: React.FormEvent<HTMLFormElement>
+  ) {
     e.preventDefault();
+
     setMessage("");
 
     if (website) return;
 
-    if (!hospital.trim() || !city.trim() || !stateName || !review.trim()) {
-      setMessage("Please fill out hospital, city, state, and review.");
+    if (
+      !hospital.trim() ||
+      !city.trim() ||
+      !stateName ||
+      !review.trim()
+    ) {
+      setMessage(
+        "Please fill out hospital, city, state, and review."
+      );
+
+      return;
+    }
+
+    if (!chartingSystem) {
+      setMessage(
+        "Please select a charting system."
+      );
+
       return;
     }
 
     if (rating === 0) {
-      setMessage("Please select a star rating before submitting.");
+      setMessage(
+        "Please select a star rating before submitting."
+      );
+
       return;
     }
 
     if (review.trim().length < 20) {
-      setMessage("Please write at least 20 characters for your review.");
+      setMessage(
+        "Please write at least 20 characters for your review."
+      );
+
       return;
     }
 
@@ -121,23 +174,30 @@ export default function SubmitForm() {
 
     const supabase = supabaseServer();
 
-    const { error } = await supabase.from("reviews").insert({
-      hospital: hospital.trim(),
-      city_state: `${city.trim()}, ${stateName}`,
-      unit: unit.trim() || null,
-      agency: agency.trim() || null,
-      pay: pay.trim() || null,
-      assignment_length: assignmentLength.trim() || null,
-      charting_system: chartingSystem || null,
-      review: review.trim(),
-      rating,
-    });
+    const { error } = await supabase
+      .from("reviews")
+      .insert({
+        hospital: hospital.trim(),
+        city_state: `${city.trim()}, ${stateName}`,
+        unit: unit.trim() || null,
+        agency: agency.trim() || null,
+        pay: pay.trim() || null,
+        assignment_length:
+          assignmentLength.trim() || null,
+        charting_system: chartingSystem,
+        review: review.trim(),
+        rating,
+      });
 
     setLoading(false);
 
     if (error) {
       console.error("SUBMIT ERROR:", error);
-      setMessage("Something went wrong. Please try again.");
+
+      setMessage(
+        "Something went wrong. Please try again."
+      );
+
       return;
     }
 
@@ -151,13 +211,26 @@ export default function SubmitForm() {
     setChartingSystem("");
     setReview("");
     setRating(0);
-    setMessage("Review submitted successfully.");
+
+    setMessage(
+      "Review submitted successfully."
+    );
   }
 
   return (
-    <form ref={wrapRef} className="card cardPad" onSubmit={handleSubmit}>
+    <form
+      ref={wrapRef}
+      className="card cardPad"
+      onSubmit={handleSubmit}
+    >
       {message && (
-        <div className={`alert ${message.includes("successfully") ? "alertSuccess" : "alertError"}`}>
+        <div
+          className={`alert ${
+            message.includes("successfully")
+              ? "alertSuccess"
+              : "alertError"
+          }`}
+        >
           {message}
         </div>
       )}
@@ -165,13 +238,23 @@ export default function SubmitForm() {
       <div className="hpWrap">
         <label>
           Website
-          <input value={website} onChange={(e) => setWebsite(e.target.value)} tabIndex={-1} />
+
+          <input
+            value={website}
+            onChange={(e) =>
+              setWebsite(e.target.value)
+            }
+            tabIndex={-1}
+          />
         </label>
       </div>
 
       <div className="formGrid">
         <div style={{ position: "relative" }}>
-          <label className="fieldLabel">Hospital *</label>
+          <label className="fieldLabel">
+            Hospital *
+          </label>
+
           <input
             className="input"
             value={hospital}
@@ -179,34 +262,53 @@ export default function SubmitForm() {
               setHospital(e.target.value);
               setActiveDropdown("hospital");
             }}
-            onFocus={() => setActiveDropdown("hospital")}
+            onFocus={() =>
+              setActiveDropdown("hospital")
+            }
             placeholder="Example: Sanford Medical Center"
           />
 
-          {activeDropdown === "hospital" && suggestions.hospitals.length > 0 && (
-            <div className="suggestions" style={{ left: 0, right: 0, top: 74 }}>
-              <div className="suggestionsHeader">Hospitals</div>
-              <div className="suggestionsBody">
-                {suggestions.hospitals.map((h) => (
-                  <button
-                    key={h}
-                    type="button"
-                    className="suggestionsItem"
-                    onClick={() => {
-                      setHospital(h);
-                      setActiveDropdown(null);
-                    }}
-                  >
-                    {h}
-                  </button>
-                ))}
+          {activeDropdown === "hospital" &&
+            suggestions.hospitals.length >
+              0 && (
+              <div
+                className="suggestions"
+                style={{
+                  left: 0,
+                  right: 0,
+                  top: 74,
+                }}
+              >
+                <div className="suggestionsHeader">
+                  Hospitals
+                </div>
+
+                <div className="suggestionsBody">
+                  {suggestions.hospitals.map(
+                    (h) => (
+                      <button
+                        key={h}
+                        type="button"
+                        className="suggestionsItem"
+                        onClick={() => {
+                          setHospital(h);
+                          setActiveDropdown(null);
+                        }}
+                      >
+                        {h}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         <div style={{ position: "relative" }}>
-          <label className="fieldLabel">City *</label>
+          <label className="fieldLabel">
+            City *
+          </label>
+
           <input
             className="input"
             value={city}
@@ -214,108 +316,275 @@ export default function SubmitForm() {
               setCity(e.target.value);
               setActiveDropdown("city");
             }}
-            onFocus={() => setActiveDropdown("city")}
+            onFocus={() =>
+              setActiveDropdown("city")
+            }
             placeholder="Example: Fargo"
           />
 
-          {activeDropdown === "city" && suggestions.cities.length > 0 && (
-            <div className="suggestions" style={{ left: 0, right: 0, top: 74 }}>
-              <div className="suggestionsHeader">Cities</div>
-              <div className="suggestionsBody">
-                {suggestions.cities.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className="suggestionsItem"
-                    onClick={() => selectCity(c)}
-                  >
-                    {c}
-                  </button>
-                ))}
+          {activeDropdown === "city" &&
+            suggestions.cities.length > 0 && (
+              <div
+                className="suggestions"
+                style={{
+                  left: 0,
+                  right: 0,
+                  top: 74,
+                }}
+              >
+                <div className="suggestionsHeader">
+                  Cities
+                </div>
+
+                <div className="suggestionsBody">
+                  {suggestions.cities.map(
+                    (c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        className="suggestionsItem"
+                        onClick={() =>
+                          selectCity(c)
+                        }
+                      >
+                        {c}
+                      </button>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
 
         <div>
-          <label className="fieldLabel">State *</label>
-          <select className="input" value={stateName} onChange={(e) => setStateName(e.target.value)}>
-            <option value="">Select state</option>
-            {states.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
+          <label className="fieldLabel">
+            State *
+          </label>
 
-        <div>
-          <label className="fieldLabel">Unit</label>
-          <input className="input" value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="Example: ICU, PACU, Med Surg" />
-        </div>
-
-        <div>
-          <label className="fieldLabel">Agency</label>
-          <input className="input" value={agency} onChange={(e) => setAgency(e.target.value)} placeholder="Example: Aya, AMN" />
-        </div>
-
-        <div>
-          <label className="fieldLabel">Pay</label>
-          <input className="input" value={pay} onChange={(e) => setPay(e.target.value)} placeholder="Example: $2,400/week" />
-        </div>
-
-        <div>
-          <label className="fieldLabel">Assignment Length</label>
-          <input className="input" value={assignmentLength} onChange={(e) => setAssignmentLength(e.target.value)} placeholder="Example: 13 weeks" />
-        </div>
-
-        <div>
-          <label className="fieldLabel">Charting System</label>
           <select
             className="input"
-            value={chartingSystem}
-            onChange={(e) => setChartingSystem(e.target.value)}
+            value={stateName}
+            onChange={(e) =>
+              setStateName(e.target.value)
+            }
+            style={{
+              background:
+                "rgba(255,255,255,.06)",
+              color: "white",
+            }}
           >
-            <option value="">Select charting system</option>
-            {chartingSystems.map((system) => (
-              <option key={system} value={system}>
-                {system}
+            <option value="">
+              Select state
+            </option>
+
+            {states.map((s) => (
+              <option
+                key={s}
+                value={s}
+              >
+                {s}
               </option>
             ))}
           </select>
         </div>
+
+        <div>
+          <label className="fieldLabel">
+            Unit
+          </label>
+
+          <input
+            className="input"
+            value={unit}
+            onChange={(e) =>
+              setUnit(e.target.value)
+            }
+            placeholder="Example: ICU, PACU, Med Surg"
+          />
+        </div>
+
+        <div>
+          <label className="fieldLabel">
+            Agency
+          </label>
+
+          <input
+            className="input"
+            value={agency}
+            onChange={(e) =>
+              setAgency(e.target.value)
+            }
+            placeholder="Example: Aya, AMN"
+          />
+        </div>
+
+        <div>
+          <label className="fieldLabel">
+            Pay
+          </label>
+
+          <input
+            className="input"
+            value={pay}
+            onChange={(e) =>
+              setPay(e.target.value)
+            }
+            placeholder="Example: $2,400/week"
+          />
+        </div>
+
+        <div>
+          <label className="fieldLabel">
+            Assignment Length
+          </label>
+
+          <input
+            className="input"
+            value={assignmentLength}
+            onChange={(e) =>
+              setAssignmentLength(
+                e.target.value
+              )
+            }
+            placeholder="Example: 13 weeks"
+          />
+        </div>
+
+        <div>
+          <label className="fieldLabel">
+            Charting System *
+          </label>
+
+          <select
+            className="input"
+            value={chartingSystem}
+            onChange={(e) =>
+              setChartingSystem(
+                e.target.value
+              )
+            }
+            style={{
+              background:
+                "rgba(255,255,255,.06)",
+              color: "white",
+            }}
+          >
+            <option value="">
+              Select charting system
+            </option>
+
+            {chartingSystems.map(
+              (system) => (
+                <option
+                  key={system}
+                  value={system}
+                >
+                  {system}
+                </option>
+              )
+            )}
+          </select>
+        </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
-        <label className="fieldLabel">Rating *</label>
-        <div className="starsPicker">
+      <div
+        style={{
+          marginTop: 22,
+          padding: 18,
+          borderRadius: 18,
+          border:
+            "1px solid rgba(69,199,199,.35)",
+          background:
+            "rgba(69,199,199,.08)",
+        }}
+      >
+        <label
+          className="fieldLabel"
+          style={{
+            fontSize: 16,
+            marginBottom: 12,
+          }}
+        >
+          ⭐ Rate This Assignment *
+        </label>
+
+        <div
+          className="starsPicker"
+          style={{
+            gap: 12,
+          }}
+        >
           {[1, 2, 3, 4, 5].map((num) => (
-            <button key={num} type="button" className="starBtn" onClick={() => setRating(num)}>
+            <button
+              key={num}
+              type="button"
+              className="starBtn"
+              onClick={() =>
+                setRating(num)
+              }
+              style={{
+                fontSize: 42,
+                transform:
+                  num === rating
+                    ? "scale(1.12)"
+                    : "scale(1)",
+                transition:
+                  "all .15s ease",
+              }}
+            >
               {num <= rating ? "⭐" : "☆"}
             </button>
           ))}
-          <span className="kicker" style={{ marginLeft: 8 }}>
-            {rating === 0 ? "Select a rating" : `${rating}/5`}
+
+          <span
+            className="kicker"
+            style={{
+              marginLeft: 10,
+              fontSize: 15,
+              fontWeight: 800,
+            }}
+          >
+            {rating === 0
+              ? "Select a rating"
+              : `${rating}/5`}
           </span>
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
-        <label className="fieldLabel">Review *</label>
+      <div style={{ marginTop: 18 }}>
+        <label className="fieldLabel">
+          Review *
+        </label>
+
         <textarea
           className="input"
           value={review}
-          onChange={(e) => setReview(e.target.value)}
+          onChange={(e) =>
+            setReview(e.target.value)
+          }
           placeholder="Share what the assignment was like. Avoid patient info, names, or confidential details."
           rows={6}
         />
       </div>
 
-      <p className="kicker" style={{ marginTop: 12 }}>
-        Do not include patient-identifiable information, coworker names, or confidential details.
+      <p
+        className="kicker"
+        style={{ marginTop: 12 }}
+      >
+        Do not include patient-identifiable
+        information, coworker names, or
+        confidential details.
       </p>
 
       <div style={{ marginTop: 16 }}>
-        <button className="button" type="submit" disabled={loading}>
-          {loading ? "Submitting..." : "Submit Review"}
+        <button
+          className="button"
+          type="submit"
+          disabled={loading}
+        >
+          {loading
+            ? "Submitting..."
+            : "Submit Review"}
         </button>
       </div>
     </form>

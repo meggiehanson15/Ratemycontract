@@ -9,24 +9,25 @@ type Suggestions = {
   cities: string[];
 };
 
-type RecentReview = {
+type Review = {
   id: number;
   hospital: string;
   city_state: string | null;
   unit: string | null;
-  rating: number;
+  rating: number | null;
   created_at: string;
 };
 
 export default function HomePage() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+
   const [suggestions, setSuggestions] = useState<Suggestions>({
     hospitals: [],
     cities: [],
   });
 
-  const [recentReviews, setRecentReviews] = useState<RecentReview[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -34,48 +35,123 @@ export default function HomePage() {
   const trimmed = useMemo(() => q.trim(), [q]);
 
   useEffect(() => {
-    async function fetchRecentReviews() {
+    async function fetchReviews() {
       const supabase = supabaseServer();
 
       const { data } = await supabase
         .from("reviews")
-        .select("id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count")
+        .select("id,created_at,hospital,city_state,unit,rating")
         .order("created_at", { ascending: false })
-        .limit(8);
+        .limit(500);
 
-      setRecentReviews((data ?? []) as RecentReview[]);
+      setReviews((data ?? []) as Review[]);
     }
 
-    fetchRecentReviews();
+    fetchReviews();
   }, []);
+
+  const stats = useMemo(() => {
+    const states = new Set<string>();
+
+    reviews.forEach((review) => {
+      const state = review.city_state?.split(",")[1]?.trim();
+
+      if (state) {
+        states.add(state);
+      }
+    });
+
+    return {
+      reviewCount: reviews.length,
+      stateCount: states.size,
+    };
+  }, [reviews]);
+
+  const mostReviewedHospitals = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        hospital: string;
+        city_state: string | null;
+        count: number;
+        ratingTotal: number;
+        ratingCount: number;
+      }
+    >();
+
+    reviews.forEach((review) => {
+      if (!review.hospital) return;
+
+      const key = `${review.hospital.toLowerCase().trim()}-${review.city_state || ""}`;
+
+      const existing = map.get(key) || {
+        hospital: review.hospital,
+        city_state: review.city_state,
+        count: 0,
+        ratingTotal: 0,
+        ratingCount: 0,
+      };
+
+      existing.count += 1;
+
+      if (review.rating) {
+        existing.ratingTotal += Number(review.rating);
+        existing.ratingCount += 1;
+      }
+
+      map.set(key, existing);
+    });
+
+    return Array.from(map.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [reviews]);
 
   useEffect(() => {
     function onDown(e: MouseEvent) {
       if (!wrapRef.current) return;
-      if (!wrapRef.current.contains(e.target as Node)) setOpen(false);
+
+      if (!wrapRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     }
 
     window.addEventListener("mousedown", onDown);
+
     return () => window.removeEventListener("mousedown", onDown);
   }, []);
 
   useEffect(() => {
     const t = setTimeout(async () => {
       if (trimmed.length < 2) {
-        setSuggestions({ hospitals: [], cities: [] });
+        setSuggestions({
+          hospitals: [],
+          cities: [],
+        });
+
         return;
       }
 
       try {
-        const res = await fetch(`/api/suggestions?q=${encodeURIComponent(trimmed)}`);
+        const res = await fetch(
+          `/api/suggestions?q=${encodeURIComponent(trimmed)}`
+        );
+
         const json = await res.json();
 
         setSuggestions({
-          hospitals: Array.isArray(json?.hospitals) ? json.hospitals : [],
-          cities: Array.isArray(json?.cities) ? json.cities : [],
+          hospitals: Array.isArray(json?.hospitals)
+            ? json.hospitals
+            : [],
+          cities: Array.isArray(json?.cities)
+            ? json.cities
+            : [],
         });
       } catch {
-        setSuggestions({ hospitals: [], cities: [] });
+        setSuggestions({
+          hospitals: [],
+          cities: [],
+        });
       }
     }, 200);
 
@@ -85,12 +161,22 @@ export default function HomePage() {
   function choose(value: string) {
     setQ(value);
     setOpen(false);
-    requestAnimationFrame(() => inputRef.current?.focus());
+
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") e.preventDefault();
-    if (e.key === "Escape") setOpen(false);
+  function onKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+
+    if (e.key === "Escape") {
+      setOpen(false);
+    }
   }
 
   return (
@@ -101,61 +187,126 @@ export default function HomePage() {
       <div className="heroGlow" />
 
       <div className="heroBlock">
-        <p className="heroBadge">Built by a travel nurse, for travel nurses</p>
+        <p className="heroBadge">
+          Built by a travel nurse, for travel nurses
+        </p>
 
-        <h1 className="h1 heroTitle">RateMyContract</h1>
+        <h1 className="h1 heroTitle">
+          RateMyContract
+        </h1>
 
         <p className="sub heroSubtitle">
-          Stop walking into contracts blind. See real travel nurse experiences
-          about hospitals, pay, units, charting systems, and assignment details
-          before you sign.
+          Stop walking into contracts blind. See real
+          travel nurse experiences about hospitals,
+          pay, units, charting systems, and assignment
+          details before you sign.
         </p>
 
         <div className="heroCtaPanel">
           <div>
-            <p className="heroCtaEyebrow">Had a contract worth warning others about?</p>
-            <h2 className="heroCtaTitle">Share your experience anonymously.</h2>
+            <p className="heroCtaEyebrow">
+              Had a contract worth warning others about?
+            </p>
+
+            <h2 className="heroCtaTitle">
+              Share your experience anonymously.
+            </h2>
+
             <p className="heroCtaText">
-              Good, bad, or somewhere in between — your review can help another
-              nurse make a smarter decision.
+              Good, bad, or somewhere in between —
+              your review can help another nurse make
+              a smarter decision.
             </p>
           </div>
 
-          <Link className="heroBigCTA" href="/submit">
+          <Link
+            className="heroBigCTA"
+            href="/submit"
+          >
             Share Your Experience
             <span>It only takes a minute</span>
           </Link>
         </div>
+
+        <div className="heroStats">
+          <div className="statCard">
+            <strong>{stats.reviewCount}</strong>
+            <span>reviews submitted</span>
+          </div>
+
+          <div className="statCard">
+            <strong>{stats.stateCount}</strong>
+            <span>states represented</span>
+          </div>
+
+          <div className="statCard">
+            <strong>{mostReviewedHospitals.length}</strong>
+            <span>trending hospitals</span>
+          </div>
+        </div>
       </div>
 
-      {recentReviews.length > 0 && (
+      {mostReviewedHospitals.length > 0 && (
         <section className="card cardPad featureCard">
-          <h2 style={{ marginBottom: 8 }}>Trending Contracts</h2>
+          <h2 style={{ marginBottom: 8 }}>
+            Most Reviewed Hospitals
+          </h2>
 
-          <p className="kicker" style={{ marginBottom: 12 }}>
-            Recently shared contract experiences from travel nurses
+          <p
+            className="kicker"
+            style={{ marginBottom: 12 }}
+          >
+            Hospitals with the most shared contract
+            experiences
           </p>
 
-          <div style={{ display: "grid", gap: 10 }}>
-            {recentReviews.slice(0, 4).map((review) => (
-              <Link
-                key={review.id}
-                href={`/reviews/${review.id}`}
-                className="pill trendLink"
-              >
-                <span>
-                  {review.hospital}
-                  {review.city_state ? ` • ${review.city_state}` : ""}
-                  {review.unit ? ` • ${review.unit}` : ""}
-                </span>
-                <span>{"⭐".repeat(Number(review.rating) || 0)}</span>
-              </Link>
-            ))}
+          <div
+            style={{
+              display: "grid",
+              gap: 10,
+            }}
+          >
+            {mostReviewedHospitals.map((item) => {
+              const average =
+                item.ratingCount > 0
+                  ? (
+                      item.ratingTotal /
+                      item.ratingCount
+                    ).toFixed(1)
+                  : "N/A";
+
+              return (
+                <Link
+                  key={`${item.hospital}-${item.city_state}`}
+                  href={`/reviews?q=${encodeURIComponent(
+                    item.hospital
+                  )}`}
+                  className="pill trendLink"
+                >
+                  <span>
+                    {item.hospital}
+
+                    {item.city_state
+                      ? ` • ${item.city_state}`
+                      : ""}
+                  </span>
+
+                  <span>
+                    {item.count} review
+                    {item.count === 1 ? "" : "s"} • ⭐{" "}
+                    {average}
+                  </span>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
 
-      <div ref={wrapRef} className="card cardPad searchFeature">
+      <div
+        ref={wrapRef}
+        className="card cardPad searchFeature"
+      >
         <form action="/reviews" method="GET">
           <div className="row">
             <input
@@ -173,27 +324,43 @@ export default function HomePage() {
               autoComplete="off"
             />
 
-            <button className="button">Search</button>
+            <button className="button">
+              Search
+            </button>
           </div>
 
-          <div className="rowWrap" style={{ marginTop: 12 }}>
-            <Link className="chip" href="/reviews?rating=5">
+          <div
+            className="rowWrap"
+            style={{ marginTop: 12 }}
+          >
+            <Link
+              className="chip"
+              href="/reviews?rating=5"
+            >
               ⭐ Top Rated
             </Link>
 
-            <Link className="chip" href="/reviews?rating=2">
+            <Link
+              className="chip"
+              href="/reviews?rating=2"
+            >
               Low Rated
             </Link>
           </div>
 
-          <p className="kicker" style={{ marginTop: 12 }}>
+          <p
+            className="kicker"
+            style={{ marginTop: 12 }}
+          >
             Anonymous reviews. No login required.
           </p>
         </form>
 
         {open && trimmed.length >= 2 && (
           <div className="suggestions">
-            <div className="suggestionsHeader">Suggestions</div>
+            <div className="suggestionsHeader">
+              Suggestions
+            </div>
 
             <div className="suggestionsBody">
               {suggestions.hospitals.map((h) => (
@@ -225,9 +392,13 @@ export default function HomePage() {
       <section className="card cardPad featureCard">
         <h2>Support RateMyContract</h2>
 
-        <p className="sub" style={{ marginBottom: 12 }}>
-          If this site helped you avoid a bad contract or make a better decision,
-          you can support keeping it available for other nurses.
+        <p
+          className="sub"
+          style={{ marginBottom: 12 }}
+        >
+          If this site helped you avoid a bad contract
+          or make a better decision, you can support
+          keeping it available for other nurses.
         </p>
 
         <div className="rowWrap">
@@ -241,12 +412,19 @@ export default function HomePage() {
           </a>
         </div>
 
-        <p className="kicker" style={{ marginTop: 10 }}>
-          Completely optional — helps keep the site running.
+        <p
+          className="kicker"
+          style={{ marginTop: 10 }}
+        >
+          Completely optional — helps keep the site
+          running.
         </p>
       </section>
 
-      <Link className="mobileStickyCTA" href="/submit">
+      <Link
+        className="mobileStickyCTA"
+        href="/submit"
+      >
         Share Your Experience
       </Link>
     </section>
