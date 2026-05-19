@@ -12,6 +12,15 @@ function makeHospitalSlug(hospital: string | null, cityState: string | null) {
     .replace(/^-+|-+$/g, "");
 }
 
+function formatDate(date: string | null) {
+  if (!date) return "Recently reviewed";
+
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
+
 function normalize(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
@@ -58,6 +67,8 @@ export default function ReviewsClient({
   const state = (stateFilter || "").toLowerCase().trim();
   const specialty = specialtyFilter || "";
 
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
   const [votes, setVotes] = useState<Record<number, { yes: number; no: number }>>(
     () =>
       Object.fromEntries(
@@ -81,6 +92,16 @@ export default function ReviewsClient({
       setClickedVotes({});
     }
   }, []);
+
+  async function copyReviewLink(reviewId: number) {
+    const url = `${window.location.origin}/reviews/${reviewId}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedId(reviewId);
+
+    setTimeout(() => {
+      setCopiedId(null);
+    }, 1600);
+  }
 
   async function vote(
     e: React.MouseEvent<HTMLButtonElement>,
@@ -116,8 +137,6 @@ export default function ReviewsClient({
       .eq("id", reviewId);
 
     if (error) {
-      console.error("Vote update error:", error.message);
-
       setVotes((prev) => ({ ...prev, [reviewId]: current }));
 
       const reverted = { ...nextClicked };
@@ -173,13 +192,13 @@ export default function ReviewsClient({
         const hospitalSlug = makeHospitalSlug(r.hospital, r.city_state);
 
         return (
-          <div key={r.id} className="reviewCard" style={{ cursor: "default" }}>
+          <div key={r.id} className="reviewCard">
             <div className="reviewTop">
               <div>
                 <Link
                   href={`/hospitals/${hospitalSlug}`}
                   className="reviewHospital"
-                  style={{ textDecoration: "none", color: "inherit" }}
+                  style={{ color: "inherit" }}
                 >
                   {r.hospital || "Unknown Hospital"}
                 </Link>
@@ -187,6 +206,7 @@ export default function ReviewsClient({
                 <div className="reviewMeta">
                   {r.city_state || "Unknown location"}
                   {r.unit ? ` • ${r.unit}` : ""}
+                  {r.created_at ? ` • ${formatDate(r.created_at)}` : ""}
                 </div>
               </div>
 
@@ -217,8 +237,16 @@ export default function ReviewsClient({
                 Read full review →
               </Link>
 
+              <button
+                type="button"
+                className="pill"
+                onClick={() => copyReviewLink(r.id)}
+              >
+                {copiedId === r.id ? "Copied!" : "Share"}
+              </button>
+
               <div className="voteBox">
-                <span className="voteQuestion">Was this helpful?</span>
+                <span className="voteQuestion">Helpful?</span>
 
                 <button
                   type="button"

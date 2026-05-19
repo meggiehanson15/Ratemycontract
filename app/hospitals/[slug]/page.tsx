@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabaseServer";
 
@@ -16,8 +17,10 @@ type Review = {
   charting_system: string | null;
   review: string | null;
   rating: number | null;
-  helpful_count: number | null;
-  not_helpful_count: number | null;
+};
+
+type PageProps = {
+  params: Promise<{ slug: string }>;
 };
 
 function makeSlug(hospital: string | null, cityState: string | null) {
@@ -28,34 +31,59 @@ function makeSlug(hospital: string | null, cityState: string | null) {
     .replace(/^-+|-+$/g, "");
 }
 
-type PageProps = {
-  params: Promise<{
-    slug: string;
-  }>;
-};
+function formatDate(date: string | null) {
+  if (!date) return "Recently reviewed";
 
-export default async function HospitalPage({ params }: PageProps) {
-  const { slug } = await params;
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    year: "numeric",
+  });
+}
 
+async function getHospitalReviews(slug: string) {
   const supabase = supabaseServer();
 
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("reviews")
     .select(
-      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count"
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating"
     )
     .order("created_at", { ascending: false })
     .limit(1000);
 
-  if (error) {
-    console.error("Hospital page error:", error.message);
-  }
-
   const allReviews = (data ?? []) as Review[];
 
-  const hospitalReviews = allReviews.filter(
+  return allReviews.filter(
     (review) => makeSlug(review.hospital, review.city_state) === slug
   );
+}
+
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const reviews = await getHospitalReviews(slug);
+
+  if (reviews.length === 0) {
+    return {
+      title: "Hospital Reviews | RateMyContract",
+    };
+  }
+
+  const first = reviews[0];
+  const title = `${first.hospital} ${first.city_state || ""} Travel Nurse Reviews | RateMyContract`;
+
+  return {
+    title,
+    description: `Read anonymous travel nurse contract reviews for ${
+      first.hospital
+    }${first.city_state ? ` in ${first.city_state}` : ""}. See ratings, units, pay details, charting systems, and assignment experiences.`,
+  };
+}
+
+export default async function HospitalPage({ params }: PageProps) {
+  const { slug } = await params;
+  const hospitalReviews = await getHospitalReviews(slug);
 
   if (hospitalReviews.length === 0) {
     notFound();
@@ -75,18 +103,12 @@ export default async function HospitalPage({ params }: PageProps) {
       : "N/A";
 
   const units = Array.from(
-    new Set(
-      hospitalReviews
-        .map((review) => review.unit)
-        .filter(Boolean)
-    )
+    new Set(hospitalReviews.map((review) => review.unit).filter(Boolean))
   );
 
   const chartingSystems = Array.from(
     new Set(
-      hospitalReviews
-        .map((review) => review.charting_system)
-        .filter(Boolean)
+      hospitalReviews.map((review) => review.charting_system).filter(Boolean)
     )
   );
 
@@ -103,28 +125,22 @@ export default async function HospitalPage({ params }: PageProps) {
       </div>
 
       <div className="pageHeader">
-        <div className="pageHeaderTop">
-          <div>
-            <h1 className="pageTitle">
-              {firstReview.hospital || "Unknown Hospital"} Travel Nurse Reviews
-            </h1>
+        <h1 className="pageTitle">
+          {firstReview.hospital || "Unknown Hospital"} Travel Nurse Reviews
+        </h1>
 
-            <p className="pageSubtitle">
-              Anonymous travel nurse contract reviews for{" "}
-              {firstReview.hospital || "this hospital"}
-              {firstReview.city_state ? ` in ${firstReview.city_state}` : ""}.
-            </p>
-          </div>
-        </div>
+        <p className="pageSubtitle">
+          Anonymous travel nurse contract reviews for{" "}
+          {firstReview.hospital || "this hospital"}
+          {firstReview.city_state ? ` in ${firstReview.city_state}` : ""}.
+        </p>
       </div>
 
       <section className="card cardPad" style={{ marginBottom: 16 }}>
         <div className="heroStats" style={{ marginTop: 0 }}>
           <div className="statCard">
             <strong>{hospitalReviews.length}</strong>
-            <span>
-              review{hospitalReviews.length === 1 ? "" : "s"} submitted
-            </span>
+            <span>review{hospitalReviews.length === 1 ? "" : "s"}</span>
           </div>
 
           <div className="statCard">
@@ -149,6 +165,19 @@ export default async function HospitalPage({ params }: PageProps) {
             Charting systems mentioned: {chartingSystems.join(", ")}
           </p>
         )}
+
+        <div className="rowWrap" style={{ marginTop: 16 }}>
+          <Link className="pill pillPrimary" href="/submit">
+            Review this hospital
+          </Link>
+
+          <Link
+            className="pill"
+            href={`/reviews?q=${encodeURIComponent(firstReview.hospital || "")}`}
+          >
+            View in all reviews
+          </Link>
+        </div>
       </section>
 
       <div className="reviewsGrid">
@@ -158,7 +187,7 @@ export default async function HospitalPage({ params }: PageProps) {
             href={`/reviews/${review.id}`}
             style={{ textDecoration: "none", color: "inherit" }}
           >
-            <div className="reviewCard" style={{ cursor: "pointer" }}>
+            <div className="reviewCard">
               <div className="reviewTop">
                 <div>
                   <div className="reviewHospital">
@@ -168,6 +197,7 @@ export default async function HospitalPage({ params }: PageProps) {
                   <div className="reviewMeta">
                     {review.city_state || "Unknown location"}
                     {review.unit ? ` • ${review.unit}` : ""}
+                    {review.created_at ? ` • ${formatDate(review.created_at)}` : ""}
                   </div>
                 </div>
 

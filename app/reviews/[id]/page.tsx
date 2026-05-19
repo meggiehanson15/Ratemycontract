@@ -21,6 +21,23 @@ type Review = {
   not_helpful_count: number | null;
 };
 
+function formatDate(date: string | null) {
+  if (!date) return "Recently reviewed";
+
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function makeHospitalSlug(hospital: string | null, cityState: string | null) {
+  return `${hospital || "unknown-hospital"}-${cityState || "unknown-location"}`
+    .toLowerCase()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function ReviewDetailPage() {
   const params = useParams();
   const id = Number(params?.id);
@@ -29,22 +46,19 @@ export default function ReviewDetailPage() {
   const [loading, setLoading] = useState(true);
   const [vote, setVote] = useState<"yes" | "no" | null>(null);
   const [savingVote, setSavingVote] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     async function loadReview() {
       const supabase = supabaseServer();
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("reviews")
         .select(
           "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count"
         )
         .eq("id", id)
         .single();
-
-      if (error) {
-        console.error("Review detail error:", error.message);
-      }
 
       setReview(data as Review | null);
       setLoading(false);
@@ -68,6 +82,15 @@ export default function ReviewDetailPage() {
       loadReview();
     }
   }, [id]);
+
+  async function copyLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 1600);
+  }
 
   async function handleVote(voteType: "yes" | "no") {
     if (!review || vote || savingVote) return;
@@ -122,8 +145,6 @@ export default function ReviewDetailPage() {
       .eq("id", review.id);
 
     if (error) {
-      console.error("Vote error:", error.message);
-
       setReview(previousReview);
       setVote(null);
       localStorage.setItem("reviewVotes", JSON.stringify(previousVotes));
@@ -154,6 +175,8 @@ export default function ReviewDetailPage() {
     );
   }
 
+  const hospitalSlug = makeHospitalSlug(review.hospital, review.city_state);
+
   return (
     <section>
       <div className="rowWrap" style={{ marginBottom: 14 }}>
@@ -169,13 +192,18 @@ export default function ReviewDetailPage() {
       <article className="card cardPad">
         <div className="detailTop">
           <div>
-            <h1 className="detailTitle">
+            <Link
+              href={`/hospitals/${hospitalSlug}`}
+              className="reviewHospital"
+              style={{ color: "inherit", fontSize: 26 }}
+            >
               {review.hospital || "Unknown Hospital"}
-            </h1>
+            </Link>
 
-            <p className="detailSubtitle">
+            <p className="detailSubtitle" style={{ marginTop: 8 }}>
               {review.city_state || "Location not listed"}
               {review.unit ? ` • ${review.unit}` : ""}
+              {review.created_at ? ` • Reviewed ${formatDate(review.created_at)}` : ""}
             </p>
           </div>
 
@@ -210,9 +238,13 @@ export default function ReviewDetailPage() {
         </div>
 
         <div className="rowWrap" style={{ marginTop: 22 }}>
+          <button type="button" className="pill" onClick={copyLink}>
+            {copied ? "Copied!" : "Share this review"}
+          </button>
+
           <a
             className="pill"
-            href={`mailto:YOUR_EMAIL@gmail.com?subject=Report Review ${review.id}&body=I would like to report this review:%0D%0A%0D%0AReview ID: ${review.id}%0D%0AHospital: ${review.hospital || "Unknown"}%0D%0AReason:%0D%0A`}
+            href={`mailto:ratemycontractsite@gmail.com?subject=Report Review ${review.id}&body=I would like to report this review:%0D%0A%0D%0AReview ID: ${review.id}%0D%0AHospital: ${review.hospital || "Unknown"}%0D%0AReason:%0D%0A`}
           >
             Report this review
           </a>
@@ -255,23 +287,11 @@ export default function ReviewDetailPage() {
           }}
         >
           <div>
-            <p
-              style={{
-                margin: 0,
-                fontWeight: 800,
-                fontSize: 15,
-              }}
-            >
+            <p style={{ margin: 0, fontWeight: 800, fontSize: 15 }}>
               Worked this assignment too?
             </p>
 
-            <p
-              className="kicker"
-              style={{
-                marginTop: 6,
-                maxWidth: 520,
-              }}
-            >
+            <p className="kicker" style={{ marginTop: 6, maxWidth: 520 }}>
               Help another travel nurse by sharing your experience anonymously.
             </p>
           </div>
