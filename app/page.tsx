@@ -49,14 +49,18 @@ export default async function HomePage() {
         <div className="heroGlow" />
 
         <div className="heroContent">
-          <p className="heroEyebrow">Anonymous travel nurse contract reviews</p>
+          <p className="heroEyebrow">
+            Anonymous travel nurse contract reviews
+          </p>
 
-          <h1 className="heroTitle">RateMyContract</h1>
+          <h1 className="heroTitle">
+            RateMyContract
+          </h1>
 
           <p className="heroSubtitle">
-            Real travel nurse experiences. Real pay. Real hospitals. Search
-            anonymous contract reviews to help negotiate smarter and avoid bad
-            assignments.
+            Real travel nurse experiences. Real pay. Real hospitals.
+            Search anonymous contract reviews to help negotiate smarter
+            and avoid bad assignments.
           </p>
 
           <div className="heroButtons">
@@ -76,8 +80,8 @@ export default async function HomePage() {
             </div>
 
             <div className="statCard">
-              <strong>{hospitalMap.size}</strong>
-              <span>hospitals reviewed</span>
+              <strong>Real</strong>
+              <span>hospital experiences</span>
             </div>
 
             <div className="statCard">
@@ -92,8 +96,13 @@ export default async function HomePage() {
         <section style={{ marginTop: 26 }}>
           <div className="sectionHeaderRow">
             <div>
-              <p className="sectionEyebrow">Most Reviewed</p>
-              <h2 className="sectionTitle">Popular Hospitals</h2>
+              <p className="sectionEyebrow">
+                Most Reviewed
+              </p>
+
+              <h2 className="sectionTitle">
+                Popular Hospitals
+              </h2>
             </div>
 
             <Link href="/reviews" className="pill">
@@ -108,7 +117,9 @@ export default async function HomePage() {
                 hospital.city_state
               );
 
-              const avg = (hospital.totalRating / hospital.count).toFixed(1);
+              const avg = (
+                hospital.totalRating / hospital.count
+              ).toFixed(1);
 
               return (
                 <Link
@@ -118,11 +129,18 @@ export default async function HomePage() {
                 >
                   <div className="trendTop">
                     <div>
-                      <h3 className="trendHospital">{hospital.hospital}</h3>
-                      <p className="trendLocation">{hospital.city_state}</p>
+                      <h3 className="trendHospital">
+                        {hospital.hospital}
+                      </h3>
+
+                      <p className="trendLocation">
+                        {hospital.city_state}
+                      </p>
                     </div>
 
-                    <div className="trendRating">⭐ {avg}</div>
+                    <div className="trendRating">
+                      ⭐ {avg}
+                    </div>
                   </div>
 
                   <div className="trendBottom">
@@ -131,7 +149,9 @@ export default async function HomePage() {
                       {hospital.count === 1 ? "" : "s"}
                     </span>
 
-                    <span className="trendLink">View reviews →</span>
+                    <span className="trendLink">
+                      View reviews →
+                    </span>
                   </div>
                 </Link>
               );
@@ -143,15 +163,22 @@ export default async function HomePage() {
       <section style={{ marginTop: 28 }}>
         <div className="sectionHeaderRow">
           <div>
-            <p className="sectionEyebrow">Browse</p>
-            <h2 className="sectionTitle">Find Reviews Faster</h2>
+            <p className="sectionEyebrow">
+              Browse
+            </p>
+
+            <h2 className="sectionTitle">
+              Find Reviews Faster
+            </h2>
           </div>
         </div>
 
         <div className="card cardPad">
           <div className="formGrid">
             <form action="/states" method="GET">
-              <label className="fieldLabel">Browse by state</label>
+              <label className="fieldLabel">
+                Browse by state
+              </label>
 
               <div className="row">
                 <select className="input" name="state" defaultValue="">
@@ -175,7 +202,9 @@ export default async function HomePage() {
             </form>
 
             <form action="/units" method="GET">
-              <label className="fieldLabel">Browse by specialty</label>
+              <label className="fieldLabel">
+                Browse by specialty
+              </label>
 
               <div className="row">
                 <select className="input" name="unit" defaultValue="">
@@ -189,7 +218,9 @@ export default async function HomePage() {
                   <option value="nicu">NICU</option>
                   <option value="oncology">Oncology</option>
                   <option value="stepdown">Stepdown / PCU</option>
-                  <option value="labor-delivery">Labor & Delivery</option>
+                  <option value="labor-delivery">
+                    Labor & Delivery
+                  </option>
                 </select>
 
                 <button className="button" type="submit">
@@ -204,12 +235,18 @@ export default async function HomePage() {
       <section className="ctaSection">
         <div className="ctaCard">
           <div>
-            <p className="ctaEyebrow">Worked this assignment too?</p>
-            <h2 className="ctaTitle">Help another travel nurse.</h2>
+            <p className="ctaEyebrow">
+              Worked this assignment too?
+            </p>
+
+            <h2 className="ctaTitle">
+              Help another travel nurse.
+            </h2>
 
             <p className="ctaText">
-              Share your honest experience anonymously — hospital culture,
-              staffing, charting systems, pay, and assignment details.
+              Share your honest experience anonymously —
+              hospital culture, staffing, charting systems,
+              pay, and assignment details.
             </p>
           </div>
 
