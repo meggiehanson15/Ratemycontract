@@ -31,7 +31,7 @@ export default function RootLayout({
           <div className="headerInner">
             <Link href="/" className="brand">
               <img
-                src="/logo.jpg"
+                src="/favicon.png"
                 alt="RateMyContract"
                 style={{
                   height: 42,
