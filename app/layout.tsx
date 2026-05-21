@@ -31,14 +31,9 @@ export default function RootLayout({
           <div className="headerInner">
             <Link href="/" className="brand">
               <img
-                src="/logo.png?v=2"
+                src="/logo.png"
                 alt="RateMyContract"
-                style={{
-                  height: 110,
-                  width: "auto",
-                  objectFit: "contain",
-                  display: "block",
-                }}
+                className="headerLogo"
               />
             </Link>
 
@@ -51,10 +46,7 @@ export default function RootLayout({
                 Reviews
               </Link>
 
-              <Link
-                className="pill pillPrimary"
-                href="/submit"
-              >
+              <Link className="pill pillPrimary" href="/submit">
                 Submit a Review
               </Link>
             </nav>
@@ -71,9 +63,7 @@ export default function RootLayout({
         <footer className="footer">
           <div className="footerInner">
             <div className="footerLeft">
-              <div className="footerBrand">
-                RateMyContract
-              </div>
+              <div className="footerBrand">RateMyContract</div>
 
               <p className="footerNote">
                 Reviews reflect individual experiences and are not independently
