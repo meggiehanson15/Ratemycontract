@@ -31,12 +31,13 @@ export default function RootLayout({
           <div className="headerInner">
             <Link href="/" className="brand">
               <img
-                src="/favicon.png"
+                src="/logo.png"
                 alt="RateMyContract"
                 style={{
-                  height: 42,
+                  height: 110,
                   width: "auto",
                   objectFit: "contain",
+                  display: "block",
                 }}
               />
             </Link>
