@@ -31,7 +31,7 @@ export default function RootLayout({
           <div className="headerInner">
             <Link href="/" className="brand">
               <img
-                src="/logo.png"
+                src="/logo-final.png"
                 alt="RateMyContract"
                 className="headerLogo"
               />
