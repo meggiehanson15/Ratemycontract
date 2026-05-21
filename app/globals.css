@@ -1203,3 +1203,43 @@ select.input option{
     font-size:13px;
   }
 }
+@media (max-width:768px){
+  .siteHeader{
+    position:relative;
+  }
+
+  .headerInner{
+    height:auto;
+    min-height:92px;
+    padding:10px 14px 12px;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+  }
+
+  .brand{
+    height:auto;
+  }
+
+  .headerLogo{
+    height:120px;
+    transform:none;
+  }
+
+  .nav{
+    width:100%;
+    justify-content:center;
+    gap:8px;
+  }
+
+  .nav .pill{
+    padding:7px 10px;
+    font-size:12px;
+  }
+
+  .siteNotice{
+    position:relative;
+    z-index:1;
+    padding:9px 14px;
+  }
+}
