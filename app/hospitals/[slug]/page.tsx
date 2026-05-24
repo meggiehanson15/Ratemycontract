@@ -282,6 +282,80 @@ export default async function HospitalPage({ params }: PageProps) {
           </div>
         </div>
 
+        <div
+          className="card"
+          style={{
+            marginTop: 18,
+            padding: 20,
+            borderRadius: 22,
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03))",
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+              marginBottom: 16,
+              fontSize: 22,
+            }}
+          >
+            Hospital Snapshot
+          </h2>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
+              gap: 14,
+            }}
+          >
+            <div className="statCard">
+              <strong>⭐ {averageRating}</strong>
+              <span>Average assignment rating</span>
+            </div>
+
+            <div className="statCard">
+              <strong>{hospitalReviews.length}</strong>
+              <span>Total travel nurse reviews</span>
+            </div>
+
+            <div className="statCard">
+              <strong>
+                {chartingSystems[0] || "Various"}
+              </strong>
+
+              <span>Most mentioned charting system</span>
+            </div>
+
+            <div className="statCard">
+              <strong>
+                {units[0] || "Multiple"}
+              </strong>
+
+              <span>Most discussed specialty</span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              marginTop: 18,
+              color: "rgba(255,255,255,.72)",
+              lineHeight: 1.7,
+              fontSize: 15,
+            }}
+          >
+            Nurses reviewing{" "}
+            <strong>
+              {firstReview.hospital}
+            </strong>{" "}
+            commonly discussed:
+            {" "}
+            {units.slice(0, 5).join(", ")}
+            {chartingSystems.length > 0 &&
+              ` using ${chartingSystems.join(", ")}`}.
+          </div>
+        </div>
+
         {units.length > 0 && (
           <p className="kicker" style={{ marginTop: 14 }}>
             Units mentioned:{" "}
