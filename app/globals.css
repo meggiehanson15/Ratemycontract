@@ -1243,3 +1243,51 @@ select.input option{
     padding:9px 14px;
   }
 }
+.exploreGrid{
+  display:grid;
+  grid-template-columns:repeat(5, minmax(0, 1fr));
+  gap:16px;
+}
+
+.exploreCard{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:112px;
+  padding:22px;
+  border-radius:18px;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.12);
+  color:white;
+  text-align:center;
+  box-shadow:0 12px 28px rgba(0,0,0,.22);
+}
+
+.exploreCard:hover{
+  text-decoration:none;
+  transform:translateY(-2px);
+  border-color:rgba(69,199,199,.45);
+  background:rgba(69,199,199,.08);
+}
+
+.exploreCard strong{
+  font-size:18px;
+  margin-bottom:10px;
+}
+
+.exploreCard span{
+  color:rgba(255,255,255,.68);
+  line-height:1.45;
+}
+
+@media (max-width:900px){
+  .exploreGrid{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width:520px){
+  .exploreGrid{
+    grid-template-columns:1fr;
+  }
+}

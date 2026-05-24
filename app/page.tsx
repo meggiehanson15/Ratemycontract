@@ -42,7 +42,7 @@ export default async function HomePage() {
     }
   });
 
-  const topHospitals = Array.from(hospitalMap.values())
+  const popularHospitals = Array.from(hospitalMap.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
 
@@ -90,11 +90,7 @@ export default async function HomePage() {
 
       const returnRate =
         hospital.returnAnswerCount > 0
-          ? Math.round(
-              (hospital.yesCount /
-                hospital.returnAnswerCount) *
-                100
-            )
+          ? Math.round((hospital.yesCount / hospital.returnAnswerCount) * 100)
           : 0;
 
       return {
@@ -119,68 +115,101 @@ export default async function HomePage() {
         <div className="heroGlow" />
 
         <div className="heroContent">
-          <p className="heroEyebrow">
-            Anonymous travel nurse contract reviews
-          </p>
+          <div>
+            <p className="heroEyebrow">
+              Anonymous travel nurse contract reviews
+            </p>
 
-          <h1 className="heroTitle">
-            RateMyContract
-          </h1>
+            <h1 className="heroTitle">
+              Real reviews.
+              <br />
+              Real insight.
+              <br />
+              <span style={{ color: "var(--teal)" }}>Smarter</span> contracts.
+            </h1>
 
-          <p className="heroSubtitle">
-            Real travel nurse experiences.
-            Real pay. Real hospitals.
-            Search anonymous contract
-            reviews to help negotiate
-            smarter and avoid bad
-            assignments.
-          </p>
+            <p className="heroSubtitle">
+              Honest feedback from travel nurses to help negotiate smarter and
+              avoid bad assignments.
+            </p>
 
-          <div className="heroButtons">
-            <Link
-              href="/submit"
-              className="button heroPrimaryBtn"
-            >
-              Submit a Review
-            </Link>
+            <div className="heroButtons">
+              <Link href="/submit" className="button heroPrimaryBtn">
+                Submit a Review
+              </Link>
 
-            <Link
-              href="/reviews"
-              className="pill heroSecondaryBtn"
-            >
-              Browse Reviews
-            </Link>
+              <Link href="/reviews" className="pill heroSecondaryBtn">
+                Browse Reviews
+              </Link>
+            </div>
           </div>
 
           <div className="heroStats">
             <div className="statCard">
-              <strong>
-                {reviews.length}
-              </strong>
-
-              <span>
-                reviews submitted
-              </span>
+              <strong>{reviews.length}</strong>
+              <span>reviews submitted</span>
             </div>
 
             <div className="statCard">
               <strong>Real</strong>
-
-              <span>
-                hospital experiences
-              </span>
+              <span>hospital experiences</span>
             </div>
 
             <div className="statCard">
-              <strong>
-                Anonymous
-              </strong>
-
-              <span>
-                community-driven
-              </span>
+              <strong>Anonymous</strong>
+              <span>community driven</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section style={{ marginTop: 34 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginBottom: 18,
+          }}
+        >
+          <p className="sectionEyebrow" style={{ margin: 0 }}>
+            Explore
+          </p>
+
+          <div
+            style={{
+              height: 1,
+              flex: 1,
+              background: "rgba(255,255,255,.14)",
+            }}
+          />
+        </div>
+
+        <div className="exploreGrid">
+          <Link className="exploreCard" href="/traveler-friendly-hospitals">
+            <strong>Traveler Rankings</strong>
+            <span>See the most traveler-friendly hospitals.</span>
+          </Link>
+
+          <Link className="exploreCard" href="/reviews/top-this-month">
+            <strong>Top This Month</strong>
+            <span>The highest rated reviews this month.</span>
+          </Link>
+
+          <Link className="exploreCard" href="/reviews/most-helpful">
+            <strong>Most Helpful</strong>
+            <span>Reviews rated most helpful by nurses.</span>
+          </Link>
+
+          <Link className="exploreCard" href="/reviews">
+            <strong>All Reviews</strong>
+            <span>Browse all hospital reviews from the community.</span>
+          </Link>
+
+          <Link className="exploreCard" href="/agencies/aya">
+            <strong>Agency Reviews</strong>
+            <span>See what nurses are saying about agencies.</span>
+          </Link>
         </div>
       </section>
 
@@ -201,64 +230,26 @@ export default async function HomePage() {
           Travel Nurse Contract Reviews
         </h2>
 
-        <p
-          style={{
-            color:
-              "rgba(255,255,255,.78)",
-            marginBottom: 16,
-          }}
-        >
-          RateMyContract helps travel
-          nurses browse anonymous
-          hospital contract reviews
-          across the United States.
-          Compare travel nurse
-          experiences, hospital
-          culture, floating frequency,
-          housing situations,
-          charting systems,
-          scheduling flexibility,
-          and assignment ratings
-          before accepting your next
-          travel nurse contract.
+        <p style={{ color: "rgba(255,255,255,.78)", marginBottom: 16 }}>
+          RateMyContract helps travel nurses browse anonymous hospital contract
+          reviews across the United States. Compare travel nurse experiences,
+          hospital culture, floating frequency, housing situations, charting
+          systems, scheduling flexibility, and assignment ratings before
+          accepting your next travel nurse contract.
         </p>
 
-        <p
-          style={{
-            color:
-              "rgba(255,255,255,.72)",
-            marginBottom: 16,
-          }}
-        >
-          Search travel nurse hospital
-          reviews by specialty, state,
-          hospital, city, agency,
-          or unit. Discover
-          traveler-friendly hospitals,
-          avoid difficult assignments,
-          and learn what other
-          travel nurses experienced
+        <p style={{ color: "rgba(255,255,255,.72)", marginBottom: 16 }}>
+          Search travel nurse hospital reviews by specialty, state, hospital,
+          city, agency, or unit. Discover traveler-friendly hospitals, avoid
+          difficult assignments, and learn what other travel nurses experienced
           during their contracts.
         </p>
 
-        <p
-          style={{
-            color:
-              "rgba(255,255,255,.68)",
-            marginBottom: 0,
-          }}
-        >
-          Reviews are submitted
-          anonymously by travel nurses
-          and include information
-          about pay packages,
-          floating expectations,
-          scheduling, unit culture,
-          charting systems,
-          housing experiences,
-          and whether nurses would
-          return for another
-          assignment.
+        <p style={{ color: "rgba(255,255,255,.68)", marginBottom: 0 }}>
+          Reviews are submitted anonymously by travel nurses and include
+          information about pay packages, floating expectations, scheduling,
+          unit culture, charting systems, housing experiences, and whether
+          nurses would return for another assignment.
         </p>
       </section>
 
@@ -266,378 +257,230 @@ export default async function HomePage() {
         <section style={{ marginTop: 26 }}>
           <div className="sectionHeaderRow">
             <div>
-              <p className="sectionEyebrow">
-                Community Favorites
-              </p>
+              <p className="sectionEyebrow">Community Favorites</p>
 
-              <h2 className="sectionTitle">
-                🔥 Most Recommended Hospitals
-              </h2>
+              <h2 className="sectionTitle">Most Recommended Hospitals</h2>
             </div>
 
-            <Link
-              href="/reviews"
-              className="pill"
-            >
-              Browse Reviews
+            <Link href="/traveler-friendly-hospitals" className="pill">
+              View Rankings
             </Link>
           </div>
 
           <div className="trendingGrid">
-            {recommendedHospitals.map(
-              (hospital) => {
-                const slug =
-                  makeHospitalSlug(
-                    hospital.hospital,
-                    hospital.city_state
-                  );
+            {recommendedHospitals.map((hospital) => {
+              const slug = makeHospitalSlug(
+                hospital.hospital,
+                hospital.city_state
+              );
 
-                return (
-                  <Link
-                    key={`${hospital.hospital}-${hospital.city_state}`}
-                    href={`/hospitals/${slug}`}
-                    className="trendCard"
-                  >
-                    <div className="trendTop">
-                      <div>
-                        <h3 className="trendHospital">
-                          {hospital.hospital}
-                        </h3>
+              return (
+                <Link
+                  key={`${hospital.hospital}-${hospital.city_state}`}
+                  href={`/hospitals/${slug}`}
+                  className="trendCard"
+                >
+                  <div className="trendTop">
+                    <div>
+                      <h3 className="trendHospital">{hospital.hospital}</h3>
 
-                        <p className="trendLocation">
-                          {hospital.city_state}
-                        </p>
-                      </div>
-
-                      <div className="trendRating">
-                        ⭐{" "}
-                        {hospital.averageRating.toFixed(
-                          1
-                        )}
-                      </div>
+                      <p className="trendLocation">{hospital.city_state}</p>
                     </div>
 
-                    <div className="trendBottom">
-                      <span>
-                        {hospital.returnRate}
-                        % would return
-                      </span>
-
-                      <span className="trendLink">
-                        View hospital →
-                      </span>
+                    <div className="trendRating">
+                      ⭐ {hospital.averageRating.toFixed(1)}
                     </div>
-                  </Link>
-                );
-              }
-            )}
+                  </div>
+
+                  <div className="trendBottom">
+                    <span>{hospital.returnRate}% would return</span>
+                    <span className="trendLink">View hospital →</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
 
-      {topHospitals.length > 0 && (
+      {popularHospitals.length > 0 && (
         <section style={{ marginTop: 26 }}>
           <div className="sectionHeaderRow">
             <div>
-              <p className="sectionEyebrow">
-                Most Reviewed
-              </p>
+              <p className="sectionEyebrow">Most Reviewed</p>
 
-              <h2 className="sectionTitle">
-                Popular Hospitals
-              </h2>
+              <h2 className="sectionTitle">Popular Hospitals</h2>
             </div>
 
-            <Link
-              href="/reviews"
-              className="pill"
-            >
+            <Link href="/reviews" className="pill">
               View All Reviews
             </Link>
           </div>
 
           <div className="trendingGrid">
-            {topHospitals.map(
-              (hospital) => {
-                const slug =
-                  makeHospitalSlug(
-                    hospital.hospital,
-                    hospital.city_state
-                  );
+            {popularHospitals.map((hospital) => {
+              const slug = makeHospitalSlug(
+                hospital.hospital,
+                hospital.city_state
+              );
 
-                const avg = (
-                  hospital.totalRating /
-                  hospital.count
-                ).toFixed(1);
+              const avg = (hospital.totalRating / hospital.count).toFixed(1);
 
-                return (
-                  <Link
-                    key={`${hospital.hospital}-${hospital.city_state}`}
-                    href={`/hospitals/${slug}`}
-                    className="trendCard"
-                  >
-                    <div className="trendTop">
-                      <div>
-                        <h3 className="trendHospital">
-                          {hospital.hospital}
-                        </h3>
+              return (
+                <Link
+                  key={`${hospital.hospital}-${hospital.city_state}`}
+                  href={`/hospitals/${slug}`}
+                  className="trendCard"
+                >
+                  <div className="trendTop">
+                    <div>
+                      <h3 className="trendHospital">{hospital.hospital}</h3>
 
-                        <p className="trendLocation">
-                          {hospital.city_state}
-                        </p>
-                      </div>
-
-                      <div className="trendRating">
-                        ⭐ {avg}
-                      </div>
+                      <p className="trendLocation">{hospital.city_state}</p>
                     </div>
 
-                    <div className="trendBottom">
-                      <span>
-                        {hospital.count}
-                        {" "}review
-                        {hospital.count === 1
-                          ? ""
-                          : "s"}
-                      </span>
+                    <div className="trendRating">⭐ {avg}</div>
+                  </div>
 
-                      <span className="trendLink">
-                        View reviews →
-                      </span>
-                    </div>
-                  </Link>
-                );
-              }
-            )}
+                  <div className="trendBottom">
+                    <span>
+                      {hospital.count} review
+                      {hospital.count === 1 ? "" : "s"}
+                    </span>
+
+                    <span className="trendLink">View reviews →</span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       )}
 
-      <section style={{ marginTop: 28 }}>
+      {reviews.length > 0 && (
+        <section style={{ marginTop: 28 }}>
+          <div className="sectionHeaderRow">
+            <div>
+              <p className="sectionEyebrow">Fresh Reviews</p>
+
+              <h2 className="sectionTitle">Recent Travel Nurse Reviews</h2>
+            </div>
+
+            <Link href="/reviews" className="pill">
+              View All Reviews
+            </Link>
+          </div>
+
+          <div className="reviewsGrid">
+            {reviews.slice(0, 6).map((review) => {
+              const slug = makeHospitalSlug(review.hospital, review.city_state);
+
+              return (
+                <Link
+                  key={review.id}
+                  href={`/hospitals/${slug}`}
+                  style={{
+                    textDecoration: "none",
+                    color: "inherit",
+                  }}
+                >
+                  <div className="reviewCard">
+                    <div className="reviewTop">
+                      <div>
+                        <div className="reviewHospital">
+                          {review.hospital || "Unknown Hospital"}
+                        </div>
+
+                        <div className="reviewMeta">
+                          {review.city_state || "Unknown location"}
+                          {review.unit ? ` • ${review.unit}` : ""}
+                        </div>
+                      </div>
+
+                      <div className="reviewRight">
+                        ⭐ {review.rating ?? "N/A"}
+                      </div>
+                    </div>
+
+                    <p className="reviewText">
+                      {review.review
+                        ? review.review.length > 140
+                          ? review.review.slice(0, 140) + "..."
+                          : review.review
+                        : "No review text provided."}
+                    </p>
+
+                    <div className="reviewBottom">
+                      <span className="reviewLink">View hospital →</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      <section className="card cardPad" style={{ marginTop: 28 }}>
         <div className="sectionHeaderRow">
           <div>
-            <p className="sectionEyebrow">
-              Browse
-            </p>
+            <p className="sectionEyebrow">FAQ</p>
 
-            <h2 className="sectionTitle">
-              Find Reviews Faster
-            </h2>
+            <h2 className="sectionTitle">Travel Nurse Review Questions</h2>
           </div>
         </div>
 
-        <div className="card cardPad">
-          <div className="formGrid">
-            <form
-              action="/states"
-              method="GET"
-            >
-              <label className="fieldLabel">
-                Browse by state
-              </label>
+        <div style={{ display: "grid", gap: 16 }}>
+          <div>
+            <h3>Are RateMyContract reviews anonymous?</h3>
+            <p className="sub">
+              Yes. Reviews are submitted anonymously so travel nurses can share
+              honest contract experiences without listing their name.
+            </p>
+          </div>
 
-              <div className="row">
-                <select
-                  className="input"
-                  name="state"
-                  defaultValue=""
-                >
-                  <option value="">
-                    Select a state
-                  </option>
+          <div>
+            <h3>Can I search reviews by hospital, state, or specialty?</h3>
+            <p className="sub">
+              Yes. You can browse travel nurse contract reviews by hospital,
+              city, state, specialty, agency, unit, rating, and charting system.
+            </p>
+          </div>
 
-                  <option value="california">
-                    California
-                  </option>
+          <div>
+            <h3>What should I include in a review?</h3>
+            <p className="sub">
+              Helpful reviews often include hospital culture, unit experience,
+              floating frequency, pay details, housing or area experience,
+              charting system, and whether you would take another contract
+              there.
+            </p>
+          </div>
 
-                  <option value="texas">
-                    Texas
-                  </option>
-
-                  <option value="florida">
-                    Florida
-                  </option>
-
-                  <option value="minnesota">
-                    Minnesota
-                  </option>
-
-                  <option value="north-dakota">
-                    North Dakota
-                  </option>
-
-                  <option value="arizona">
-                    Arizona
-                  </option>
-
-                  <option value="washington">
-                    Washington
-                  </option>
-
-                  <option value="colorado">
-                    Colorado
-                  </option>
-
-                  <option value="illinois">
-                    Illinois
-                  </option>
-
-                  <option value="new-york">
-                    New York
-                  </option>
-                </select>
-
-                <button
-                  className="button"
-                  type="submit"
-                >
-                  Go
-                </button>
-              </div>
-            </form>
-
-            <form
-              action="/units"
-              method="GET"
-            >
-              <label className="fieldLabel">
-                Browse by specialty
-              </label>
-
-              <div className="row">
-                <select
-                  className="input"
-                  name="unit"
-                  defaultValue=""
-                >
-                  <option value="">
-                    Select a specialty
-                  </option>
-
-                  <option value="icu">
-                    ICU
-                  </option>
-
-                  <option value="er">
-                    ER / ED
-                  </option>
-
-                  <option value="or">
-                    OR
-                  </option>
-
-                  <option value="pacu">
-                    PACU
-                  </option>
-
-                  <option value="telemetry">
-                    Telemetry
-                  </option>
-
-                  <option value="med-surg">
-                    Med Surg
-                  </option>
-
-                  <option value="nicu">
-                    NICU
-                  </option>
-
-                  <option value="oncology">
-                    Oncology
-                  </option>
-
-                  <option value="stepdown">
-                    Stepdown / PCU
-                  </option>
-
-                  <option value="labor-delivery">
-                    Labor & Delivery
-                  </option>
-                </select>
-
-                <button
-                  className="button"
-                  type="submit"
-                >
-                  Go
-                </button>
-              </div>
-            </form>
+          <div>
+            <h3>What should I avoid sharing?</h3>
+            <p className="sub">
+              Do not include patient information, patient names, coworker names,
+              private medical details, or confidential hospital information.
+            </p>
           </div>
         </div>
       </section>
-      <section className="card cardPad" style={{ marginTop: 28 }}>
-  <div className="sectionHeaderRow">
-    <div>
-      <p className="sectionEyebrow">FAQ</p>
-
-      <h2 className="sectionTitle">
-        Travel Nurse Review Questions
-      </h2>
-    </div>
-  </div>
-
-  <div style={{ display: "grid", gap: 16 }}>
-    <div>
-      <h3>Are RateMyContract reviews anonymous?</h3>
-      <p className="sub">
-        Yes. Reviews are submitted anonymously so travel nurses can share honest
-        contract experiences without listing their name.
-      </p>
-    </div>
-
-    <div>
-      <h3>Can I search reviews by hospital, state, or specialty?</h3>
-      <p className="sub">
-        Yes. You can browse travel nurse contract reviews by hospital, city,
-        state, specialty, agency, unit, rating, and charting system.
-      </p>
-    </div>
-
-    <div>
-      <h3>What should I include in a review?</h3>
-      <p className="sub">
-        Helpful reviews often include hospital culture, unit experience,
-        floating frequency, pay details, housing or area experience, charting
-        system, and whether you would take another contract there.
-      </p>
-    </div>
-
-    <div>
-      <h3>What should I avoid sharing?</h3>
-      <p className="sub">
-        Do not include patient information, patient names, coworker names,
-        private medical details, or confidential hospital information.
-      </p>
-    </div>
-  </div>
-</section>
 
       <section className="ctaSection">
         <div className="ctaCard">
           <div>
-            <p className="ctaEyebrow">
-              Worked this assignment too?
-            </p>
+            <p className="ctaEyebrow">Worked this assignment too?</p>
 
-            <h2 className="ctaTitle">
-              Help another travel nurse.
-            </h2>
+            <h2 className="ctaTitle">Help another travel nurse.</h2>
 
             <p className="ctaText">
-              Share your honest experience
-              anonymously — hospital
-              culture, staffing,
-              charting systems,
-              pay, and assignment
-              details.
+              Share your honest experience anonymously — hospital culture,
+              staffing, charting systems, pay, and assignment details.
             </p>
           </div>
 
-          <Link
-            href="/submit"
-            className="button"
-          >
+          <Link href="/submit" className="button">
             Share Your Experience
           </Link>
         </div>
