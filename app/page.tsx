@@ -566,6 +566,52 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+      <section className="card cardPad" style={{ marginTop: 28 }}>
+  <div className="sectionHeaderRow">
+    <div>
+      <p className="sectionEyebrow">FAQ</p>
+
+      <h2 className="sectionTitle">
+        Travel Nurse Review Questions
+      </h2>
+    </div>
+  </div>
+
+  <div style={{ display: "grid", gap: 16 }}>
+    <div>
+      <h3>Are RateMyContract reviews anonymous?</h3>
+      <p className="sub">
+        Yes. Reviews are submitted anonymously so travel nurses can share honest
+        contract experiences without listing their name.
+      </p>
+    </div>
+
+    <div>
+      <h3>Can I search reviews by hospital, state, or specialty?</h3>
+      <p className="sub">
+        Yes. You can browse travel nurse contract reviews by hospital, city,
+        state, specialty, agency, unit, rating, and charting system.
+      </p>
+    </div>
+
+    <div>
+      <h3>What should I include in a review?</h3>
+      <p className="sub">
+        Helpful reviews often include hospital culture, unit experience,
+        floating frequency, pay details, housing or area experience, charting
+        system, and whether you would take another contract there.
+      </p>
+    </div>
+
+    <div>
+      <h3>What should I avoid sharing?</h3>
+      <p className="sub">
+        Do not include patient information, patient names, coworker names,
+        private medical details, or confidential hospital information.
+      </p>
+    </div>
+  </div>
+</section>
 
       <section className="ctaSection">
         <div className="ctaCard">
