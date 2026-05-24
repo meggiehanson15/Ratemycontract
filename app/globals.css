@@ -94,6 +94,9 @@ ul{ list-style:none; padding-left:0; margin:0; }
 }
 
 .pill{
+  font-family: Georgia, "Times New Roman", serif;
+font-weight: 600;
+letter-spacing: .2px;
   display:inline-flex;
   align-items:center;
   padding:8px 12px;
@@ -1290,4 +1293,15 @@ select.input option{
   .exploreGrid{
     grid-template-columns:1fr;
   }
+}
+/* Final formal button text override */
+.pill,
+.nav .pill,
+.rowWrap .pill,
+.resultsMeta .chip,
+.exploreCard strong,
+.button {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-weight: 600 !important;
+  letter-spacing: .25px;
 }

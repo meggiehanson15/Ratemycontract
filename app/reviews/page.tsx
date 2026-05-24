@@ -118,7 +118,7 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
           <select className="input" name="state" defaultValue={state}>
             <option value="">All states</option>
             {[
-              "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID",
+              "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","GU","HI","ID",
               "IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS",
               "MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK",
               "OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV",
@@ -173,13 +173,7 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
             Low Rated
           </Link>
 
-          <Link className="chip" href="/reviews/most-helpful">
-            Most Helpful
-          </Link>
-
-          <Link className="chip" href="/reviews/top-this-month">
-            Best This Month
-          </Link>
+    
 
           <Link className="chip" href="/reviews">
             Clear Filters
