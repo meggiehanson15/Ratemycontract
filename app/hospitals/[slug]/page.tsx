@@ -14,6 +14,10 @@ type Review = {
   agency: string | null;
   pay: string | null;
   assignment_length: string | null;
+  contract_timeframe: string | null;
+  would_work_again: string | null;
+  housing_area_rating: string | null;
+  floating_frequency: string | null;
   charting_system: string | null;
   review: string | null;
   rating: number | null;
@@ -152,7 +156,7 @@ async function getHospitalReviews(slug: string) {
   const { data } = await supabase
     .from("reviews")
     .select(
-      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating"
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,contract_timeframe,would_work_again,housing_area_rating,floating_frequency,charting_system,review,rating"
     )
     .order("created_at", { ascending: false })
     .limit(1000);
@@ -179,10 +183,14 @@ export async function generateMetadata({
   const first = reviews[0];
 
   return {
-    title: `${first.hospital} ${first.city_state || ""} Travel Nurse Reviews | RateMyContract`,
+    title: `${first.hospital} ${
+      first.city_state || ""
+    } Travel Nurse Reviews | RateMyContract`,
     description: `Read anonymous travel nurse contract reviews for ${
       first.hospital
-    }${first.city_state ? ` in ${first.city_state}` : ""}. See ratings, units, pay details, charting systems, and assignment experiences.`,
+    }${
+      first.city_state ? ` in ${first.city_state}` : ""
+    }. See ratings, units, agencies, pay details, charting systems, and assignment experiences.`,
   };
 }
 
@@ -218,6 +226,10 @@ export default async function HospitalPage({ params }: PageProps) {
     new Set(
       hospitalReviews.map((review) => review.charting_system).filter(Boolean)
     )
+  ) as string[];
+
+  const agencies = Array.from(
+    new Set(hospitalReviews.map((review) => review.agency).filter(Boolean))
   ) as string[];
 
   return (
@@ -282,106 +294,6 @@ export default async function HospitalPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div
-          className="card"
-          style={{
-            marginTop: 18,
-            padding: 20,
-            borderRadius: 22,
-            background:
-              "linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03))",
-          }}
-        >
-          <h2
-            style={{
-              marginTop: 0,
-              marginBottom: 16,
-              fontSize: 22,
-            }}
-          >
-            Hospital Snapshot
-          </h2>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))",
-              gap: 14,
-            }}
-          >
-            <div className="statCard">
-              <strong>⭐ {averageRating}</strong>
-              <span>Average assignment rating</span>
-            </div>
-
-            <div className="statCard">
-              <strong>{hospitalReviews.length}</strong>
-              <span>Total travel nurse reviews</span>
-            </div>
-
-            <div className="statCard">
-              <strong>
-                {chartingSystems[0] || "Various"}
-              </strong>
-
-              <span>Most mentioned charting system</span>
-            </div>
-
-            <div className="statCard">
-              <strong>
-                {units[0] || "Multiple"}
-              </strong>
-
-              <span>Most discussed specialty</span>
-            </div>
-          </div>
-
-          <div
-            style={{
-              marginTop: 18,
-              color: "rgba(255,255,255,.72)",
-              lineHeight: 1.7,
-              fontSize: 15,
-            }}
-          >
-            Nurses reviewing{" "}
-            <strong>
-              {firstReview.hospital}
-            </strong>{" "}
-            commonly discussed:
-            {" "}
-            {units.slice(0, 5).join(", ")}
-            {chartingSystems.length > 0 &&
-              ` using ${chartingSystems.join(", ")}`}.
-          </div>
-        </div>
-
-        {units.length > 0 && (
-          <p className="kicker" style={{ marginTop: 14 }}>
-            Units mentioned:{" "}
-            {units.map((unit, index) => {
-              const unitSlug = getUnitSlug(unit);
-
-              return (
-                <span key={unit}>
-                  {unitSlug ? (
-                    <Link href={`/units/${unitSlug}`}>{unit}</Link>
-                  ) : (
-                    unit
-                  )}
-                  {index < units.length - 1 ? ", " : ""}
-                </span>
-              );
-            })}
-          </p>
-        )}
-
-        {chartingSystems.length > 0 && (
-          <p className="kicker" style={{ marginTop: 8 }}>
-            Charting systems mentioned: {chartingSystems.join(", ")}
-          </p>
-        )}
-
         <div className="rowWrap" style={{ marginTop: 16 }}>
           <Link className="pill pillPrimary" href="/submit">
             Review this hospital
@@ -405,7 +317,6 @@ export default async function HospitalPage({ params }: PageProps) {
       <div className="reviewsGrid">
         {hospitalReviews.map((review) => {
           const reviewState = getStateFromCityState(review.city_state);
-          const unitSlug = getUnitSlug(review.unit);
 
           return (
             <Link
@@ -435,7 +346,7 @@ export default async function HospitalPage({ params }: PageProps) {
                         </span>
                       )}
 
-                      {unitSlug && (
+                      {review.unit && (
                         <span className="chip">
                           {review.unit}
                         </span>
@@ -443,17 +354,58 @@ export default async function HospitalPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  <div className="reviewRight">⭐ {review.rating ?? "N/A"}</div>
+                  <div className="reviewRight">
+                    ⭐ {review.rating ?? "N/A"}
+                  </div>
                 </div>
 
                 <div className="reviewBadges">
-                  {review.agency && <span className="badge">{review.agency}</span>}
-                  {review.pay && <span className="badge">{review.pay}</span>}
-                  {review.assignment_length && (
-                    <span className="badge">{review.assignment_length}</span>
+                  {review.agency && (
+                    <span className="badge">
+                      {review.agency}
+                    </span>
                   )}
+
+                  {review.pay && (
+                    <span className="badge">
+                      {review.pay}
+                    </span>
+                  )}
+
+                  {review.assignment_length && (
+                    <span className="badge">
+                      {review.assignment_length}
+                    </span>
+                  )}
+
+                  {review.contract_timeframe && (
+                    <span className="badge">
+                      {review.contract_timeframe}
+                    </span>
+                  )}
+
+                  {review.would_work_again && (
+                    <span className="badge">
+                      Would work again: {review.would_work_again}
+                    </span>
+                  )}
+
+                  {review.housing_area_rating && (
+                    <span className="badge">
+                      Housing/area: {review.housing_area_rating}
+                    </span>
+                  )}
+
+                  {review.floating_frequency && (
+                    <span className="badge">
+                      {review.floating_frequency}
+                    </span>
+                  )}
+
                   {review.charting_system && (
-                    <span className="badge">{review.charting_system}</span>
+                    <span className="badge">
+                      {review.charting_system}
+                    </span>
                   )}
                 </div>
 
@@ -466,7 +418,9 @@ export default async function HospitalPage({ params }: PageProps) {
                 </p>
 
                 <div className="reviewBottom">
-                  <span className="reviewLink">Read full review →</span>
+                  <span className="reviewLink">
+                    Read full review →
+                  </span>
                 </div>
               </div>
             </Link>

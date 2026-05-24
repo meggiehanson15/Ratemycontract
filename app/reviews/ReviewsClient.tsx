@@ -69,20 +69,23 @@ export default function ReviewsClient({
 
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
-  const [votes, setVotes] = useState<Record<number, { yes: number; no: number }>>(
-    () =>
-      Object.fromEntries(
-        reviews.map((r: any) => [
-          r.id,
-          {
-            yes: Number(r.helpful_count) || 0,
-            no: Number(r.not_helpful_count) || 0,
-          },
-        ])
-      )
+  const [votes, setVotes] = useState<
+    Record<number, { yes: number; no: number }>
+  >(() =>
+    Object.fromEntries(
+      reviews.map((r: any) => [
+        r.id,
+        {
+          yes: Number(r.helpful_count) || 0,
+          no: Number(r.not_helpful_count) || 0,
+        },
+      ])
+    )
   );
 
-  const [clickedVotes, setClickedVotes] = useState<Record<number, "yes" | "no">>({});
+  const [clickedVotes, setClickedVotes] = useState<
+    Record<number, "yes" | "no">
+  >({});
 
   useEffect(() => {
     try {
@@ -219,6 +222,22 @@ export default function ReviewsClient({
               {r.assignment_length && (
                 <span className="badge">{r.assignment_length}</span>
               )}
+              {r.contract_timeframe && (
+                <span className="badge">{r.contract_timeframe}</span>
+              )}
+              {r.would_work_again && (
+                <span className="badge">
+                  Would work again: {r.would_work_again}
+                </span>
+              )}
+              {r.housing_area_rating && (
+                <span className="badge">
+                  Housing/area: {r.housing_area_rating}
+                </span>
+              )}
+              {r.floating_frequency && (
+                <span className="badge">{r.floating_frequency}</span>
+              )}
               {r.charting_system && (
                 <span className="badge">{r.charting_system}</span>
               )}
@@ -250,7 +269,9 @@ export default function ReviewsClient({
 
                 <button
                   type="button"
-                  className={`voteBtn ${userVote === "yes" ? "voteBtnActive" : ""}`}
+                  className={`voteBtn ${
+                    userVote === "yes" ? "voteBtnActive" : ""
+                  }`}
                   onClick={(e) => vote(e, r.id, "yes")}
                   disabled={Boolean(userVote)}
                 >
@@ -259,7 +280,9 @@ export default function ReviewsClient({
 
                 <button
                   type="button"
-                  className={`voteBtn ${userVote === "no" ? "voteBtnActive" : ""}`}
+                  className={`voteBtn ${
+                    userVote === "no" ? "voteBtnActive" : ""
+                  }`}
                   onClick={(e) => vote(e, r.id, "no")}
                   disabled={Boolean(userVote)}
                 >

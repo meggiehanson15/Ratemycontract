@@ -32,11 +32,31 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
   let query = supabase
     .from("reviews")
     .select(
-      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,charting_system,review,rating,helpful_count,not_helpful_count",
+      "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,contract_timeframe,would_work_again,housing_area_rating,floating_frequency,charting_system,review,rating,helpful_count,not_helpful_count",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
     .range(from, to);
+
+  if (q) {
+    query = query.or(
+      [
+        `hospital.ilike.%${q}%`,
+        `city_state.ilike.%${q}%`,
+        `agency.ilike.%${q}%`,
+        `unit.ilike.%${q}%`,
+        `charting_system.ilike.%${q}%`,
+      ].join(",")
+    );
+  }
+
+  if (state) {
+    query = query.ilike("city_state", `%, ${state}`);
+  }
+
+  if (specialty) {
+    query = query.ilike("unit", `%${specialty}%`);
+  }
 
   if (rating) {
     const ratingNumber = Number(rating);
@@ -153,6 +173,14 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
             Low Rated
           </Link>
 
+          <Link className="chip" href="/reviews/most-helpful">
+            Most Helpful
+          </Link>
+
+          <Link className="chip" href="/reviews/top-this-month">
+            Best This Month
+          </Link>
+
           <Link className="chip" href="/reviews">
             Clear Filters
           </Link>
@@ -191,7 +219,10 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
               </span>
 
               {currentPage < totalPages && (
-                <Link className="pill pillPrimary" href={buildPageHref(currentPage + 1)}>
+                <Link
+                  className="pill pillPrimary"
+                  href={buildPageHref(currentPage + 1)}
+                >
                   Next Page →
                 </Link>
               )}
