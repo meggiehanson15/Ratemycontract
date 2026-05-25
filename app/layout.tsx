@@ -13,6 +13,9 @@ export const metadata = {
   description:
     "Transparent travel nurse contract reviews — real experiences, real pay, real units.",
   metadataBase: new URL(siteUrl),
+  icons: {
+  icon: "/icon.png",
+},
 
   verification: {
     google: "RjqevS6c3TLvEh34P6XmF62CX1V5fyPK8QDq6ORiroM",
