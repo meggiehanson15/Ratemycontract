@@ -19,11 +19,7 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>
@@ -44,6 +40,10 @@ export default function RootLayout({
 
               <Link className="pill" href="/reviews">
                 Reviews
+              </Link>
+
+              <Link className="pill" href="/agencies">
+                Agencies
               </Link>
 
               <Link className="pill pillPrimary" href="/submit">
@@ -75,11 +75,52 @@ export default function RootLayout({
               </p>
             </div>
 
-            <div className="footerLinks">
-              <Link href="/about">About</Link>
-              <Link href="/privacy">Privacy</Link>
-              <Link href="/terms">Terms</Link>
-              <Link href="/contact">Contact</Link>
+            <div
+              className="footerLinks"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 12,
+                alignItems: "center",
+              }}
+            >
+              <Link className="pill" href="/about">
+                About
+              </Link>
+
+              <Link
+                href="/favorites"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "12px 18px",
+                  borderRadius: 999,
+                  fontWeight: 800,
+                  fontSize: 14,
+                  textDecoration: "none",
+                  color: "#081217",
+                  background:
+                    "linear-gradient(135deg, rgba(103,214,218,1), rgba(59,190,220,1))",
+                  boxShadow:
+                    "0 12px 28px rgba(103,214,218,.28), 0 2px 10px rgba(0,0,0,.18)",
+                  transition: "all .18s ease",
+                }}
+              >
+                Most Useful Products
+              </Link>
+
+              <Link className="pill" href="/privacy">
+                Privacy
+              </Link>
+
+              <Link className="pill" href="/terms">
+                Terms
+              </Link>
+
+              <Link className="pill" href="/contact">
+                Contact
+              </Link>
             </div>
           </div>
         </footer>

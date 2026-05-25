@@ -206,7 +206,7 @@ export default async function HomePage() {
             <span>Browse all hospital reviews from the community.</span>
           </Link>
 
-          <Link className="exploreCard" href="/agencies/aya">
+          <Link className="exploreCard" href="/agencies">
             <strong>Agency Reviews</strong>
             <span>See what nurses are saying about agencies.</span>
           </Link>

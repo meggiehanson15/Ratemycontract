@@ -61,6 +61,7 @@ export default function SubmitForm() {
   const [floatingFrequency, setFloatingFrequency] = useState("");
   const [chartingSystem, setChartingSystem] = useState("");
   const [review, setReview] = useState("");
+  const [agencyExperience, setAgencyExperience] = useState("");
   const [rating, setRating] = useState(0);
   const [website, setWebsite] = useState("");
   const [loading, setLoading] = useState(false);
@@ -151,6 +152,7 @@ export default function SubmitForm() {
       ${pay}
       ${assignmentLength}
       ${review}
+      ${agencyExperience}
     `.toLowerCase();
 
     const isSpam = spamPatterns.some((pattern) =>
@@ -205,6 +207,7 @@ export default function SubmitForm() {
       floating_frequency: floatingFrequency || null,
       charting_system: chartingSystem,
       review: review.trim(),
+      agency_experience: agencyExperience.trim() || null,
       rating,
       status: reviewStatus,
     });
@@ -230,6 +233,7 @@ export default function SubmitForm() {
     setFloatingFrequency("");
     setChartingSystem("");
     setReview("");
+    setAgencyExperience("");
     setRating(0);
 
     setMessage("Review submitted successfully.");
@@ -531,6 +535,30 @@ export default function SubmitForm() {
           placeholder="Share what the assignment was like. Avoid patient info, names, or confidential details."
           rows={6}
         />
+      </div>
+
+      <div
+        className="card cardPad"
+        style={{
+          marginTop: 18,
+          background:
+            "linear-gradient(180deg, rgba(103,214,218,.08), rgba(255,255,255,.035))",
+        }}
+      >
+        <label className="fieldLabel">Agency Experience (Optional)</label>
+
+        <textarea
+          className="input"
+          value={agencyExperience}
+          onChange={(e) => setAgencyExperience(e.target.value)}
+          placeholder="Optional: recruiter communication, payroll, credentialing, responsiveness, support, etc."
+          rows={4}
+          maxLength={1000}
+        />
+
+        <p className="kicker" style={{ marginTop: 10 }}>
+          This helps other travelers understand the agency side of the contract.
+        </p>
       </div>
 
       <p className="kicker" style={{ marginTop: 12 }}>
