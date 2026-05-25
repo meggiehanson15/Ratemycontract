@@ -69,19 +69,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data } = await supabase
     .from("reviews")
-    .select("id,hospital,city_state,created_at");
+    .select("id,hospital,city_state,created_at")
+    .eq("status", "approved");
 
   const reviews = data ?? [];
 
-  const hospitalUrls = reviews.map((review) => ({
-    url: `${baseUrl}/hospitals/${makeHospitalSlug(
-      review.hospital,
-      review.city_state
-    )}`,
-    lastModified: review.created_at
-      ? new Date(review.created_at)
-      : new Date(),
-  }));
+  const uniqueHospitalUrls = Array.from(
+    new Map(
+      reviews.map((review) => {
+        const slug = makeHospitalSlug(review.hospital, review.city_state);
+
+        return [
+          slug,
+          {
+            url: `${baseUrl}/hospitals/${slug}`,
+            lastModified: review.created_at
+              ? new Date(review.created_at)
+              : new Date(),
+          },
+        ];
+      })
+    ).values()
+  );
 
   const reviewUrls = reviews.map((review) => ({
     url: `${baseUrl}/reviews/${review.id}`,
@@ -95,9 +104,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       reviews
         .map((review) => {
           const state = review.city_state?.split(",")[1]?.trim().toUpperCase();
-          return state && stateMap[state]
-            ? stateMap[state]
-            : null;
+
+          return state && stateMap[state] ? stateMap[state] : null;
         })
         .filter(Boolean)
     )
@@ -107,24 +115,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     url: `${baseUrl}/states/${state}`,
     lastModified: new Date(),
   }));
+
   const unitUrls = [
-  "icu",
-  "er",
-  "or",
-  "pacu",
-  "telemetry",
-  "med-surg",
-  "nicu",
-  "oncology",
-  "stepdown",
-  "cvicu",
-  "psych",
-  "rehab",
-  "labor-delivery",
-].map((unit) => ({
-  url: `${baseUrl}/units/${unit}`,
-  lastModified: new Date(),
-}));
+    "icu",
+    "er",
+    "or",
+    "pacu",
+    "telemetry",
+    "med-surg",
+    "nicu",
+    "oncology",
+    "stepdown",
+    "cvicu",
+    "psych",
+    "rehab",
+    "labor-delivery",
+  ].map((unit) => ({
+    url: `${baseUrl}/units/${unit}`,
+    lastModified: new Date(),
+  }));
 
   return [
     {
@@ -139,7 +148,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${baseUrl}/submit`,
       lastModified: new Date(),
     },
-    ...hospitalUrls,
+    ...uniqueHospitalUrls,
     ...reviewUrls,
     ...stateUrls,
     ...unitUrls,

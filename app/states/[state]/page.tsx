@@ -132,6 +132,7 @@ export default async function StatePage({ params }: PageProps) {
     .select(
       "id,hospital,city_state,unit,agency,pay,assignment_length,charting_system,rating,review,created_at"
     )
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(1000);
 
@@ -240,9 +241,7 @@ export default async function StatePage({ params }: PageProps) {
 
           <div className="statCard">
             <strong>{hospitals.length}</strong>
-            <span>
-              hospital{hospitals.length === 1 ? "" : "s"} reviewed
-            </span>
+            <span>hospital{hospitals.length === 1 ? "" : "s"} reviewed</span>
           </div>
 
           <div className="statCard">

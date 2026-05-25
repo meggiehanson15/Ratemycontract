@@ -116,10 +116,34 @@ function makeSlug(hospital: string | null, cityState: string | null) {
 function formatDate(date: string | null) {
   if (!date) return "Recently reviewed";
 
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
+  const now = new Date();
+  const reviewDate = new Date(date);
+
+  const diffMs = now.getTime() - reviewDate.getTime();
+
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (days < 1) return "Reviewed today";
+
+  if (days === 1) return "1 day ago";
+
+  if (days < 7) return `${days} days ago`;
+
+  const weeks = Math.floor(days / 7);
+
+  if (weeks < 5) {
+    return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+  }
+
+  const months = Math.floor(days / 30);
+
+  if (months < 12) {
+    return `${months} month${months === 1 ? "" : "s"} ago`;
+  }
+
+  const years = Math.floor(days / 365);
+
+  return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
 function getStateFromCityState(cityState: string | null) {
@@ -158,6 +182,7 @@ async function getHospitalReviews(slug: string) {
     .select(
       "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,contract_timeframe,would_work_again,housing_area_rating,floating_frequency,charting_system,review,rating"
     )
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .limit(1000);
 
@@ -203,7 +228,6 @@ export default async function HospitalPage({ params }: PageProps) {
   }
 
   const firstReview = hospitalReviews[0];
-
   const stateInfo = getStateFromCityState(firstReview.city_state);
 
   const ratingReviews = hospitalReviews.filter((review) => review.rating);
@@ -220,16 +244,6 @@ export default async function HospitalPage({ params }: PageProps) {
 
   const units = Array.from(
     new Set(hospitalReviews.map((review) => review.unit).filter(Boolean))
-  ) as string[];
-
-  const chartingSystems = Array.from(
-    new Set(
-      hospitalReviews.map((review) => review.charting_system).filter(Boolean)
-    )
-  ) as string[];
-
-  const agencies = Array.from(
-    new Set(hospitalReviews.map((review) => review.agency).filter(Boolean))
   ) as string[];
 
   return (
@@ -276,44 +290,6 @@ export default async function HospitalPage({ params }: PageProps) {
         </div>
       </div>
 
-      <section className="card cardPad" style={{ marginBottom: 16 }}>
-        <div className="heroStats" style={{ marginTop: 0 }}>
-          <div className="statCard">
-            <strong>{hospitalReviews.length}</strong>
-            <span>review{hospitalReviews.length === 1 ? "" : "s"}</span>
-          </div>
-
-          <div className="statCard">
-            <strong>⭐ {averageRating}</strong>
-            <span>average rating</span>
-          </div>
-
-          <div className="statCard">
-            <strong>{units.length}</strong>
-            <span>unit{units.length === 1 ? "" : "s"} reviewed</span>
-          </div>
-        </div>
-
-        <div className="rowWrap" style={{ marginTop: 16 }}>
-          <Link className="pill pillPrimary" href="/submit">
-            Review this hospital
-          </Link>
-
-          <Link
-            className="pill"
-            href={`/reviews?q=${encodeURIComponent(firstReview.hospital || "")}`}
-          >
-            View in all reviews
-          </Link>
-
-          {stateInfo && (
-            <Link className="pill" href={`/states/${stateInfo.slug}`}>
-              More {stateInfo.abbreviation} hospitals
-            </Link>
-          )}
-        </div>
-      </section>
-
       <div className="reviewsGrid">
         {hospitalReviews.map((review) => {
           const reviewState = getStateFromCityState(review.city_state);
@@ -347,9 +323,7 @@ export default async function HospitalPage({ params }: PageProps) {
                       )}
 
                       {review.unit && (
-                        <span className="chip">
-                          {review.unit}
-                        </span>
+                        <span className="chip">{review.unit}</span>
                       )}
                     </div>
                   </div>
@@ -360,16 +334,38 @@ export default async function HospitalPage({ params }: PageProps) {
                 </div>
 
                 <div className="reviewBadges">
-                  {review.agency && (
+                  {review.contract_timeframe && (
                     <span className="badge">
-                      {review.agency}
+                      🕒 {review.contract_timeframe}
                     </span>
                   )}
 
-                  {review.pay && (
-                    <span className="badge">
-                      {review.pay}
+                  {review.would_work_again && (
+                    <span
+                      className="badge"
+                      style={{
+                        background:
+                          review.would_work_again === "Yes"
+                            ? "rgba(34,197,94,.14)"
+                            : review.would_work_again === "No"
+                            ? "rgba(239,68,68,.14)"
+                            : "rgba(245,158,11,.14)",
+                      }}
+                    >
+                      {review.would_work_again === "Yes"
+                        ? "✅ Would return"
+                        : review.would_work_again === "No"
+                        ? "❌ Would not return"
+                        : "⚠️ Maybe return"}
                     </span>
+                  )}
+
+                  {review.agency && (
+                    <span className="badge">{review.agency}</span>
+                  )}
+
+                  {review.pay && (
+                    <span className="badge">{review.pay}</span>
                   )}
 
                   {review.assignment_length && (
@@ -378,21 +374,9 @@ export default async function HospitalPage({ params }: PageProps) {
                     </span>
                   )}
 
-                  {review.contract_timeframe && (
-                    <span className="badge">
-                      {review.contract_timeframe}
-                    </span>
-                  )}
-
-                  {review.would_work_again && (
-                    <span className="badge">
-                      Would work again: {review.would_work_again}
-                    </span>
-                  )}
-
                   {review.housing_area_rating && (
                     <span className="badge">
-                      Housing/area: {review.housing_area_rating}
+                      Housing: {review.housing_area_rating}
                     </span>
                   )}
 

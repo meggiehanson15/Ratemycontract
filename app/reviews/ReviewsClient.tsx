@@ -15,10 +15,31 @@ function makeHospitalSlug(hospital: string | null, cityState: string | null) {
 function formatDate(date: string | null) {
   if (!date) return "Recently reviewed";
 
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    year: "numeric",
-  });
+  const now = new Date();
+  const reviewDate = new Date(date);
+
+  const diffMs = now.getTime() - reviewDate.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (days < 1) return "Reviewed today";
+  if (days === 1) return "1 day ago";
+  if (days < 7) return `${days} days ago`;
+
+  const weeks = Math.floor(days / 7);
+
+  if (weeks < 5) {
+    return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
+  }
+
+  const months = Math.floor(days / 30);
+
+  if (months < 12) {
+    return `${months} month${months === 1 ? "" : "s"} ago`;
+  }
+
+  const years = Math.floor(days / 365);
+
+  return `${years} year${years === 1 ? "" : "s"} ago`;
 }
 
 function normalize(value: string) {
@@ -217,22 +238,38 @@ export default function ReviewsClient({
             </div>
 
             <div className="reviewBadges">
+              {r.contract_timeframe && (
+                <span className="badge">🕒 {r.contract_timeframe}</span>
+              )}
+
+              {r.would_work_again && (
+                <span
+                  className="badge"
+                  style={{
+                    background:
+                      r.would_work_again === "Yes"
+                        ? "rgba(34,197,94,.14)"
+                        : r.would_work_again === "No"
+                        ? "rgba(239,68,68,.14)"
+                        : "rgba(245,158,11,.14)",
+                  }}
+                >
+                  {r.would_work_again === "Yes"
+                    ? "✅ Would return"
+                    : r.would_work_again === "No"
+                    ? "❌ Would not return"
+                    : "⚠️ Maybe return"}
+                </span>
+              )}
+
               {r.agency && <span className="badge">{r.agency}</span>}
               {r.pay && <span className="badge">{r.pay}</span>}
               {r.assignment_length && (
                 <span className="badge">{r.assignment_length}</span>
               )}
-              {r.contract_timeframe && (
-                <span className="badge">{r.contract_timeframe}</span>
-              )}
-              {r.would_work_again && (
-                <span className="badge">
-                  Would work again: {r.would_work_again}
-                </span>
-              )}
               {r.housing_area_rating && (
                 <span className="badge">
-                  Housing/area: {r.housing_area_rating}
+                  Housing: {r.housing_area_rating}
                 </span>
               )}
               {r.floating_frequency && (

@@ -19,6 +19,29 @@ const chartingSystems = [
   "Not sure",
 ];
 
+const spamPatterns = [
+  "http://",
+  "https://",
+  "www.",
+  ".com",
+  ".net",
+  ".org",
+  "crypto",
+  "bitcoin",
+  "telegram",
+  "whatsapp",
+  "cash app",
+  "cashapp",
+  "loan",
+  "gambling",
+  "casino",
+  "make money fast",
+  "work from home",
+  "click here",
+  "promo code",
+  "discount code",
+];
+
 type Suggestions = {
   hospitals: string[];
   cities: string[];
@@ -118,6 +141,25 @@ export default function SubmitForm() {
     setActiveDropdown(null);
   }
 
+  function getReviewStatus() {
+    const combinedText = `
+      ${hospital}
+      ${city}
+      ${stateName}
+      ${unit}
+      ${agency}
+      ${pay}
+      ${assignmentLength}
+      ${review}
+    `.toLowerCase();
+
+    const isSpam = spamPatterns.some((pattern) =>
+      combinedText.includes(pattern)
+    );
+
+    return isSpam ? "flagged" : "approved";
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -148,6 +190,7 @@ export default function SubmitForm() {
     setLoading(true);
 
     const supabase = supabaseServer();
+    const reviewStatus = getReviewStatus();
 
     const { error } = await supabase.from("reviews").insert({
       hospital: hospital.trim(),
@@ -163,6 +206,7 @@ export default function SubmitForm() {
       charting_system: chartingSystem,
       review: review.trim(),
       rating,
+      status: reviewStatus,
     });
 
     setLoading(false);

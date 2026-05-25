@@ -35,6 +35,7 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
       "id,created_at,hospital,city_state,unit,agency,pay,assignment_length,contract_timeframe,would_work_again,housing_area_rating,floating_frequency,charting_system,review,rating,helpful_count,not_helpful_count",
       { count: "exact" }
     )
+    .eq("status", "approved")
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -173,8 +174,6 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
             Low Rated
           </Link>
 
-    
-
           <Link className="chip" href="/reviews">
             Clear Filters
           </Link>
@@ -195,13 +194,7 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
           />
 
           {totalPages > 1 && (
-            <div
-              className="rowWrap"
-              style={{
-                marginTop: 20,
-                justifyContent: "center",
-              }}
-            >
+            <div className="rowWrap" style={{ marginTop: 20, justifyContent: "center" }}>
               {currentPage > 1 && (
                 <Link className="pill" href={buildPageHref(currentPage - 1)}>
                   ← Previous Page
@@ -213,10 +206,7 @@ export default async function ReviewsPage({ searchParams }: PageProps) {
               </span>
 
               {currentPage < totalPages && (
-                <Link
-                  className="pill pillPrimary"
-                  href={buildPageHref(currentPage + 1)}
-                >
+                <Link className="pill pillPrimary" href={buildPageHref(currentPage + 1)}>
                   Next Page →
                 </Link>
               )}

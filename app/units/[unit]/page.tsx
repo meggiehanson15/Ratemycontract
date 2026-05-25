@@ -75,6 +75,7 @@ export default async function UnitPage({
   const { data } = await supabase
     .from("reviews")
     .select("id,hospital,city_state,unit,rating,review,created_at")
+    .eq("status", "approved")
     .order("created_at", { ascending: false });
 
   const reviews = (data ?? []) as Review[];
@@ -96,17 +97,12 @@ export default async function UnitPage({
     return (
       <section>
         <div className="pageHeader">
-          <p className="heroEyebrow">
-            Specialty Reviews
-          </p>
+          <p className="heroEyebrow">Specialty Reviews</p>
 
-          <h1 className="pageTitle">
-            No Reviews Yet
-          </h1>
+          <h1 className="pageTitle">No Reviews Yet</h1>
 
           <p className="pageSubtitle">
-            No travel nurse reviews have been submitted for{" "}
-            {unitInfo.name} yet.
+            No travel nurse reviews have been submitted for {unitInfo.name} yet.
           </p>
 
           <div className="rowWrap" style={{ marginTop: 18 }}>
@@ -160,17 +156,13 @@ export default async function UnitPage({
   return (
     <section>
       <div className="pageHeader">
-        <p className="heroEyebrow">
-          Specialty Reviews
-        </p>
+        <p className="heroEyebrow">Specialty Reviews</p>
 
-        <h1 className="pageTitle">
-          {unitInfo.name} Travel Nurse Reviews
-        </h1>
+        <h1 className="pageTitle">{unitInfo.name} Travel Nurse Reviews</h1>
 
         <p className="pageSubtitle">
-          Browse anonymous {unitInfo.name} travel nurse reviews,
-          hospital ratings, and assignment experiences.
+          Browse anonymous {unitInfo.name} travel nurse reviews, hospital
+          ratings, and assignment experiences.
         </p>
       </div>
 
@@ -220,20 +212,15 @@ export default async function UnitPage({
                   </p>
                 </div>
 
-                <div className="trendRating">
-                  ⭐ {avg}
-                </div>
+                <div className="trendRating">⭐ {avg}</div>
               </div>
 
               <div className="trendBottom">
                 <span>
-                  {hospital.count} review
-                  {hospital.count === 1 ? "" : "s"}
+                  {hospital.count} review{hospital.count === 1 ? "" : "s"}
                 </span>
 
-                <span className="trendLink">
-                  View hospital →
-                </span>
+                <span className="trendLink">View hospital →</span>
               </div>
             </Link>
           );
